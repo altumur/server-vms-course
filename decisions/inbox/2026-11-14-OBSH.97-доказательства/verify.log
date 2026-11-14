@@ -1,0 +1,73 @@
+{
+  "base": "a8e9c7f694495fc4ce5a746b2ebfabf9f1ceeccf",
+  "preserved_case_rows": 81,
+  "preserved_case_columns": 12,
+  "new_cases": [
+    "must_match_empty_both_create",
+    "must_match_empty_both_edit",
+    "must_match_nonempty_equal_edit",
+    "reverse_must_match_empty_both_create",
+    "reverse_must_match_nonempty_equal_create",
+    "reverse_must_match_empty_both_edit",
+    "reverse_must_match_nonempty_equal_edit",
+    "required_inherit_name_null",
+    "required_inherit_name_missing",
+    "required_inherit_of_null",
+    "required_inherit_of_missing",
+    "required_inherit_given",
+    "url_scheme_credentials",
+    "url_no_host_credentials",
+    "url_no_path_credentials",
+    "url_a15_secret",
+    "url_a15_login",
+    "url_a15_login_secret",
+    "url_a15_unparsed",
+    "int_as_bool",
+    "int_as_array",
+    "int_as_object",
+    "float_as_bool",
+    "float_as_array",
+    "float_as_object",
+    "float_as_numeric_string",
+    "reverse_garbled",
+    "direct_before_reverse_garbled",
+    "reverse_key_mismatch_before_garbled",
+    "reverse_key_garbled_before_mismatch",
+    "reverse_unit_garbled_before_table_mismatch",
+    "reverse_unit_mismatch_before_table_garbled",
+    "weight_absent_empty_form",
+    "weight_explicit_zero",
+    "weight_explicit_one"
+  ],
+  "case_counts": {
+    "ok": 36,
+    "refused": 80
+  },
+  "preserved_state_rows": 24,
+  "new_states": [
+    "value-number-over-binary64",
+    "value-number-under-binary64",
+    "cursor-number-over-binary64",
+    "value-number-large-finite",
+    "cursor-number-large-finite"
+  ],
+  "state_counts": {
+    "acts": 8,
+    "unreadable": 15,
+    "readable_nonacting": 6
+  },
+  "wire": {
+    "wire_bindings": 3,
+    "wire_calls": 1984,
+    "wire_excluded": 34
+  },
+  "fixture": {
+    "verdict": "ok",
+    "layer": null,
+    "paths": [],
+    "rows": []
+  },
+  "filters": "only the judge-only fixture added; M/J dispositions and ordering checked",
+  "canonical_manifests": "unchanged",
+  "result": "PASS static data checks; candidate execution not performed"
+}

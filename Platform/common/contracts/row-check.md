@@ -119,6 +119,10 @@ unreadable:  a row not by the form of the family or a value not by the schema �
              many rows counts it (P/04 N1.2 snapshot_state_garbled; P/01.1 N0 «Stability of output»)
 ```
 
+The state `value` is parsed as strict JSON by the [JSON contract](json.md). Every number in it must have a finite binary64
+value; a number outside that range at any depth makes the state unreadable, even if the schema permits `number`.
+Reading does not require the stored JSON text to be JCS; canonical spelling is checked only by the writer.
+
 ## Preparation of fields
 
 At creation the composition of client fields is determined for each field of the manifest (before the row is written):
@@ -126,7 +130,8 @@ At creation the composition of client fields is determined for each field of the
 1. The field is given — take exactly the given value, including `0`, `false`, `[]` and `null` (except `null` of a field with
    `inherit` — step 2); a default does not replace it. The admissibility of the value is checked by the sections «Order of checks» and «Refusals».
 2. The field is not given or is given as `null` and has `inherit` — do not create an element; the value of `inherit` is the end
-   of the read chain, not a value to write into the new row.
+   of the read chain, not a value to write into the new row. Such a field is not given for P3 and P4, including when its name
+   occurs in the body with `null`: a required field still gives P4 `required`.
 3. The field is not given and has `default` — take the value of `default` from the loaded manifest; for a field `string` with
    `unit.id: numeric` each `{id}` in it is replaced by the decimal notation of the id issued to this creation (N3 «create»
    step 3), once: an edit does not recompute the value (P/02.1 N1.3; VMS request № 1, the Architect's decision of 2026-10-23).
@@ -214,12 +219,17 @@ ref_and_must_match:                      # a field of a unit or a table (P/02.1 
       their values equal the new values of the target, otherwise 409 conflict, fault must_match; a referring row does not read — fault garbled
 ```
 
+In either direction an absent compared element or an element equal to `""` matches nothing, including another `""`.
+
 ## The url value
 
 A field `type: url` is read thus: not by RFC 3986 (`%zz`, control characters, `\`), no scheme or host (the place of the host and the values of
 «no host» — `schemes.<s>.host`/`none` of the [address contract](url-credentials.md) «Schemes»; with `host: path` there is no path — there is no place of the host: `mirror://local`),
 with credentials (`@` in the authority; a password or a login in the address by the rule of the field — [address contract](url-credentials.md)),
 with `#` (except a scheme with `fragment: none`), a scheme not from `schemes`, a non-numeric port — refusal `bad_url` (the address contract «Schemes»).
+
+A parsed address refused by «Schemes» is not an A15 refusal: its detail names no `credentials` fields, even if the address
+contains credentials. An A15 refusal names the credential fields selected by A15 without repeating the address or its parts.
 
 ## Order of checks
 
@@ -234,8 +244,10 @@ P1. body fields: a platform field → an unknown field. Platform fields are plat
 P2. preparation (section «Preparation of fields»), keeping the information on what the client gave; then the checks of values:
     blob (not a digest; at creation not "") → json (not_json, too_long 4000 bytes of the canonical text — there is no other
     limit, nesting included: RC-13; schema) → enum →
-    value types (not_number) → schema of a field of any type except json — over the parsed value (C06-SCHEMA-ANY-TYPE-01) → weight: a present value of the field placement.weight.field ≥ 1 (P/04 N1.3; after
+    value types (not_number or type) → schema of a field of any type except json — over the parsed value (C06-SCHEMA-ANY-TYPE-01) → weight: a present value of the field placement.weight.field ≥ 1 (P/04 N1.3; after
     the default is filled) → url (section «The url value») → group → labels ([label alphabet](../labels.md))
+    weight: present means given by the client or filled from default; the empty form prepared for an absent field without default
+    is not present for this check and does not trigger the threshold
     group: there is no refusal — there is no value, it is empty or the host does not read — the unit is not in a group; bad_url of the source — the
     url step with the name of the field; the row check does not compute the group (explanation — P/04 N1.3 group_by; RC-12)
 P3. named: the source field of the id is given or obtained non-empty from the default → by the section «Identifier and field constraints»; an empty or
@@ -245,7 +257,9 @@ P4. required: each required field is given by the client and is not ""
 P5. references in order: direct ref / must_match of the row itself → reverse must_match (the rows that refer to it) →
     unique over live rows; within each — the order of unit.fields (RC-11). Reverse must_match, the first refusal: the referring
     subsystems in ascending order of name bytes; within a subsystem — unit rows, then tables in ascending order of name bytes;
-    within them — the order of the manifest fields; rows — in ascending order of key bytes (RC-15). The target of ref/must_match is the key
+    within them — the order of the manifest fields; rows — in ascending order of key bytes (RC-15). An unreadable row of a referring
+    family gives garbled when that family and row are reached in this order, even if its reference cannot be read; it does not
+    preempt a refusal reached earlier. The target of ref/must_match is the key
     of the checked row itself: the target is the row itself in its new prepared state, both sides are compared by the new values
     (a consistent edit of the pair passes, an inconsistent one — must_match); the same at creation (RC-16)
 
@@ -292,9 +306,10 @@ library — the outcome of the order `refused` and the count `creates.refused` o
 | a json field is larger than 4000 bytes of the canonical text / not by the schema | P2 | `error: too_long`, `fault: too_long` / `error: type` | 400 |
 | `enum` is not from the list | P2 | `error: enum` | 400 |
 | the value of a field that is not `json` is not by the `schema` of the field | P2 | `error: type`, `detail` with the name of the field | 400 |
-| the value is not by the type of the field: not a number for `int`/`float`, not a boolean, not a list of strings, not a string | P2 | for numbers `error: not_number`, `fault: not_number`; otherwise `error: type`; `detail` with the name of the field | 400 |
-| an integer value of the field placement.weight.field < 1 | P2 | `{detail, error: type}`, without fault; `detail` «\<field> must be at least 1» | 400 |
-| `url` does not read, with credentials, with `#`, a scheme not from `schemes` | P2 | `error: bad_url`, `fault: bad_url`; `detail` without the value, with the names of the fields `credentials` ([address contract](url-credentials.md) A15) | 400 |
+| `int`/`float`: a number supplied as a string, or a JSON number outside the field's numeric range or notation | P2 | `error: not_number`, `fault: not_number`; `detail` with the name of the field | 400 |
+| another type mismatch, including a boolean, array, object or `null` for `int`/`float`; not a boolean, not a list of strings, not a string | P2 | `error: type`; `detail` with the name of the field | 400 |
+| a present integer value of the field placement.weight.field < 1 | P2 | `{detail, error: type}`, without fault; `detail` «\<field> must be at least 1» | 400 |
+| `url` does not read, with credentials, with `#`, a scheme not from `schemes` | P2 | `error: bad_url`, `fault: bad_url`; `detail` without the value; credential field names only for A15, none for a parsed address refused by «Schemes» ([address contract](url-credentials.md)) | 400 |
 | the labels are not by the label alphabet | P2 | `error: labels` | 400 |
 | the id is not by the section «Identifier and field constraints» | P3 | `error: bad_id`, `detail` with the name and the reason | 400 |
 | a `fixed` field changes (an edit or a return over a tombstone); the source field of the id changes | P3, R2 | `error: fixed`, `detail` «\<field> is fixed …» | 400 |
@@ -306,7 +321,9 @@ library — the outcome of the order `refused` and the count `creates.refused` o
 The packages [`row-check`](../vectors/row-check/README.md) (the common row check), [`values-by-type`](../vectors/values-by-type/README.md) (the forms of values), [`fault`](../vectors/fault/README.md) (the words of refusals); the address — the package [`secret-in`](../vectors/secret-in/README.md) of the address contract. (ADR-0083 addendum (32) item 2) The unit state — the table
 `state.tsv` of the package `row-check` (`acts`, `unreadable`; STATE169-VECTORS-01, the Architect's decision of 2026-10-27).
 
-The input of the single command `vectors` of the package `row-check`: `files` are the manifests with the keys `testsub.subsystem.yaml` and `testsub2.subsystem.yaml` (the bytes of these files of the export, loaded together: the catalogue of both; for `state.tsv` `testsub2.subsystem.yaml`, the schemas of `unit.state`). The cells of `cases.tsv` are `unit`, `op`, `body`, `stored`, `rows`: `unit` is `<subsystem>/<rows>` (the units table of a manifest) or `<subsystem>/<table>` (a table of a manifest); `op` is `create` or `edit`; `body` is the passed fields, a JSON object, numbers are lexemes as written; `stored` is the read row (`edit`) or the tombstone over which one creates (`create`), a JSON object in the form of a unit row (the elements are strings), empty — there is no row; `rows` is the other rows of the store that the check reads, a JSON object `{key: row}`, `"@garbled"` instead of a row — the row is not read by its form. The native outcome is code 0 and one JSON object: `{"result": "ok", "row": {…}}` (`row` is the prepared row `{element: text}`, no element — no key) or `{"result": "refused", "word": "<fault or class>", "field": "<field>"}` (no field — no key `field`). `word` is the `fault` from the dictionary of the package `fault`, if the refusal carries it, otherwise the class of the row «Refusals» of this contract: `platform_field`, `unknown_field`, `blob`, `enum`, `type`, `labels`, `bad_id`, `fixed`, `required`; `field` is the field that the refusal names; for `unknown_field` it is all unknown names in ascending byte order separated by commas, while a door names the smallest (P/06.1 N2; the Architect's decision of 2026-11-09).
+The input of the single command `vectors` of the package `row-check`: `files` are the manifests with the keys `testsub.subsystem.yaml` and `testsub2.subsystem.yaml` (the exact fixture bytes selected by the wire, loaded together: the catalogue of both; for `state.tsv` `testsub2.subsystem.yaml`, the schemas of `unit.state`). The cells of `cases.tsv` are `unit`, `op`, `body`, `stored`, `rows`: `unit` is `<subsystem>/<rows>` (the units table of a manifest) or `<subsystem>/<table>` (a table of a manifest); `op` is `create` or `edit`; `body` is the passed fields, a JSON object, numbers are lexemes as written; `stored` is the read row (`edit`) or the tombstone over which one creates (`create`), a JSON object in the form of a unit row (the elements are strings), empty — there is no row; `rows` is the other rows of the store that the check reads, a JSON object `{key: row}`, `"@garbled"` instead of a row — the row is not read by its form. The native outcome is code 0 and one JSON object: `{"result": "ok", "row": {…}}` (`row` is the prepared row `{element: text}`, no element — no key) or `{"result": "refused", "word": "<fault or class>", "field": "<field>"}` (no field — no key `field`). `word` is the `fault` from the dictionary of the package `fault`, if the refusal carries it, otherwise the class of the row «Refusals» of this contract: `platform_field`, `unknown_field`, `blob`, `enum`, `type`, `labels`, `bad_id`, `fixed`, `required`; `field` is the field that the refusal names; for `unknown_field` it is all unknown names in ascending byte order separated by commas, while a door names the smallest (P/06.1 N2; the Architect's decision of 2026-11-09).
+
+For `bad_url` the native refusal also contains `credential_fields`, an array of strings with the credential field names actually carried by the diagnostic under A15 of the [address contract](url-credentials.md). A parsed address refused by «Schemes» returns `[]`, even when it contains credentials. The order of names is not judged. A provided expectation compares this array as a set; an empty expectation cell leaves it unexamined. The array does not replace `field`.
 
 The cells of `state.tsv` are `name`, `unit`, `state`: `name` is the name of the state, a JSON string from `unit.state` of the manifest; `unit` is the unit row as read, an object of elements (`born`, `revision`; `deleted: "true"` — a tombstone) or `"@absent"` — there is no row; `state` is the row `<sub>/state/<name>/<id>` as read, an object of elements (`born`, `revision`, `epoch`, `value` — JSON text) or `"@absent"`. The native outcome is code 0 and the object `{acts, unreadable}`, for an acting state also `value`, the parsed value.
 

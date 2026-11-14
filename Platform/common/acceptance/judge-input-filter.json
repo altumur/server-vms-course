@@ -4482,6 +4482,11 @@
       "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."
     },
     {
+      "path": "Platform/common/vectors/row-check/fixtures/testsub2.subsystem.yaml",
+      "disposition": "include",
+      "basis": "Isolated row-check fixture for required inheritance, weight presence and reverse-reference checks; judge input only."
+    },
+    {
       "path": "Platform/common/vectors/row-check/state.tsv",
       "disposition": "include",
       "basis": "Vector package routed to a P/03 target by forms/targets.routing.tsv."

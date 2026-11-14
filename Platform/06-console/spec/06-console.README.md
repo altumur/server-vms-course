@@ -429,9 +429,11 @@ summary and the text of 405 must correspond to the actual list of methods.
 
 ### Chapter 6.1: weights, bodies and tables
 
-By the separate rig of the acceptance README check the weights -1/0/1: the lower bound acts after the
-materialisation of POST and for the passed PUT, a refusal does not change the row. A non-number remains an ordinary
-not_number, and an integer less than 1 gives a text refusal without fault.
+By the separate rig of the acceptance README check the weights -1/0/1 and omission without a default. The lower bound
+acts on a supplied or default-filled value, including a passed PUT; the empty type form prepared for an absent field
+without a default does not trigger it. A refusal does not change the row. Type and numeric-form refusals follow the row
+check contract's «Refusals»: booleans, arrays and objects for an int field give `type`; a numeric string or a number outside
+the field's range or notation gives `not_number`; a present integer less than 1 gives `type` without fault.
 
 For a table 400 check the full text and structural refusals. The common TextRefusal/FormRefusal intersect without fault,
 hence anyOf, not oneOf; check all local oneOf for the intersection of branches.

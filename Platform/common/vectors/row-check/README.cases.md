@@ -14,9 +14,16 @@ cases are on it. In the input of the single command `vectors` the manifests are 
 `testsub.subsystem.yaml` and `testsub2.subsystem.yaml` (the bytes of these files of the export); `cells` — `unit`, `op`, `body`,
 `stored`, `rows` (the inventory C04/C06-NEXT-167, the Architect's decision of 2026-10-27).
 
+The `manifest` input column selects the bytes supplied under `testsub2.subsystem.yaml`. Ordinary rows select
+`Platform/common/data/testsub/testsub2.subsystem.yaml`. Rows that need required inheritance, an integer weight without a default,
+or a unit as a reference target select the isolated [fixture](fixtures/testsub2.subsystem.yaml). Its subsystem name and units table remain
+`testsub2/tallies`; its `name` and `of` fields are required and inherited, `weight` has no default and is declared as
+`placement.weight.field`, and unit and table `link` fields refer to the units table. This fixture is judge input only; the common manifests are unchanged.
+`manifest` selects input bytes in the wire and is not passed as an algorithm cell. Expected answers never select fixture bytes.
+
 ## `cases.tsv`
 
-UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; the first line without `#` is the header. Twelve fields:
+UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; the first line without `#` is the header. Fourteen fields:
 
 | Field | Meaning |
 |---|---|
@@ -31,9 +38,21 @@ UTF-8, LF, fields separated by TAB; lines with `#` and empty lines are skipped; 
 | `field` | the field that the refusal names (the first in the order of the contract); for `unknown_field` — all unknown names in ascending byte order separated by commas (RC-10) |
 | `step` | the step of the contract at which the refusal occurs |
 | `row` | for `ok` — the part of the prepared row that is compared: a JSON object `{element: text}`, `"@absent"` — there is no element; empty — not compared. The text of a list in the form of a JSON array is compared by JSON value (as `@json` of the vectors [`values-by-type`](../values-by-type/README.md)) |
+| `manifest` | input-only path from the export root to the manifest supplied as `testsub2.subsystem.yaml`; it selects bytes in `files`, not an algorithm cell |
+| `credential_fields` | optional expected JSON array of credential-field names for `bad_url`; compared as a set; `[]` requires no names; an empty cell leaves this list unjudged |
 | `note` | a rule of the contract or a step of the acceptance of P/06.1 |
 
-81 cases: 30 `ok`, 51 `refused` (`labels_repeat` — a repeat of a label in the labels field of a unit, the value as it is, C51-LABEL-LIST-01; `unique_required_*` — required + unique with an empty value, the refusal `P4` before unique; a non-required unique with empty ones — `unique_*_not_counted`, RC-17; C51-UNIQUE-EMPTY-01).
+116 cases: 36 `ok`, 80 `refused`. Existing label-repeat and empty-unique cases retain their input values and outcomes.
+
+| Boundary | Cases and observation |
+|---|---|
+| Empty matching elements | `must_match_empty_both_*` and `reverse_must_match_empty_both_*`: direct and reverse checks refuse empty against empty at creation and edit; nonempty-equal controls pass |
+| Required inheritance | `required_inherit_{name,of}_{null,missing}`: omitted and null inherited fields are not given; P4 refuses, including an absent named-id source; `required_inherit_given` passes |
+| URL refusal fields | `url_{scheme,no_host,no_path}_credentials`: parsed-address Schemes refusals have `credential_fields: []`, despite credential findings; `url_a15_*` cover secret, login, both and an unparsable address |
+| Numeric type refusal | `{int,float}_as_{bool,array,object}` receive `type`; `float_as_numeric_string` receives `not_number`, as do the existing numeric-string and int-lexeme/range cases |
+| Reverse unreadable rows | `reverse_garbled`, `direct_before_reverse_garbled`, `reverse_key_*` and `reverse_unit_*`: unreadability is found at the referring-family check in RC-15 order, after direct checks; competing errors distinguish row-key and unit-before-table order |
+| Weight presence | `weight_absent_empty_form`: omitted weight without default prepares `"0"` and passes; `weight_explicit_zero` refuses and `weight_explicit_one` passes |
+| State number range | `state.tsv`: positive and negative overflow in result values and overflow in cursor values are unreadable; large finite controls act |
 
 ## Run
 
@@ -50,7 +69,7 @@ tables (ACC-VECTORS-CONNECT-03: a row is performed by the role whose norm calls 
 The native outcome of `cases.tsv` is code 0 and one JSON object: `ok` — `{"result": "ok", "row": {…}}`, `row` — the prepared row
 `{element: text}` (no element — no key); `refused` — `{"result": "refused", "word": "<fault or class>", "field": "<field>"}`
 (no field — no key `field`). Compared are `result`, `word`, `field` and for `ok` — the elements named in the column `row`
-(`@absent` — no key; a list in the form of a JSON array — by value); the column `step` is not compared — it is for a human: the step
+(`@absent` — no key; a list in the form of a JSON array — by value). For `bad_url`, the native `credential_fields` array names fields by A15; it is empty for a refusal by Schemes. It is compared as a set only when its expectation cell is nonempty; earlier cases leave it unjudged. The column `step` is not compared — it is for a human: the step
 of the contract (C06-VECTOR-ROWCHECK-WIRE-168-11, the Architect's decision of 2026-10-27; the input and the algorithm do not change).
 
 ## `state.tsv`
@@ -69,7 +88,7 @@ the first line without `#` is the header `case<TAB>name<TAB>unit<TAB>state<TAB>e
 
 The expectations are the judge of the family `state` in the reader mode by the text of the row (`x-encoding: jcs` — JCS is checked only by the writer),
 then `value` by the schema `unit.state.<name>` of the manifest; `acts` — the unit row is live, the `born` are equal, the `revision` are equal (for `cursor`
-not reconciled: the contract `acts`, P/03.6 N1.7 `cursor`; C170-STATE-CURSOR-01), the epoch is not reconciled. 24 rows: 6 act, 12 are unreadable, 6 are readable and do not act.
+not reconciled: the contract `acts`, P/03.6 N1.7 `cursor`; C170-STATE-CURSOR-01), the epoch is not reconciled. 29 rows: 8 act, 15 are unreadable, 6 are readable and do not act. Strict JSON parsing of `value` rejects numbers outside finite binary64 even when the schema accepts a number; the reader's tolerance of non-JCS spacing does not relax this range.
 The input of the single command `vectors` is `cells` `name`, `unit`, `state`; `files` — `testsub2.subsystem.yaml` (the schemas of `unit.state`).
 The native outcome is code 0 and the object `expect` (the general rule «Vectors» of the common acceptance README).
 
@@ -81,9 +100,9 @@ A current state born is required: 32 lowercase hex. born-empty-both and born-emp
 
 ## What the vector does not cover
 
-The weight threshold `placement.weight.field` and the reverse check `must_match` at a target unit, including the order of the first refusal
-of several referring rows (RC-15), and a reference of a row to itself (RC-16): in the manifests `testsub` and `testsub2` the units table has no weight field and there is no
-unit referred to by another row — they are checked by reading and by the scenarios of P/06.1. The claim, the number, the write and the HTTP codes of the door are the acceptance of P/06.1; `made_prefix`, `made_key` and the secrets of the door too. A table row
+Weight presence and its threshold, direct and reverse `must_match` (including unit targets), and the tested first-refusal boundaries of RC-15
+are covered above. The full subsystem-name, table-name and manifest-field order of RC-15, and a reference of a row to itself (RC-16),
+remain reading or P/06.1 scenario checks. The claim, the number, the write and the HTTP codes of the door are the acceptance of P/06.1; `made_prefix`, `made_key` and the secrets of the door too. A table row
 (the contract, «Preparation of fields» — «Table row») and the ring boundary (ibid.) — by reading and by the scenarios of P/06.1 (tables) and
 P/06.2: the table rows are `table_*` (`testsub2/shelves`: the preparation and the platform fields of a table, C06-ROWCHECK-TABLE-FIELDS-707-01),
 the full replacement and the secrets of a table, the states of the ring — by reading: they are not in the input (C06-ROWCHECK-TABLE-33-01, C06-ROWCHECK-DEV-01).
