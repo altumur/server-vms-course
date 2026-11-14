@@ -1,0 +1,9 @@
+{
+ "GOTOOLCHAIN": "local",
+ "GOENV": "off",
+ "GOSUMDB": "off",
+ "GOPROXY": "file:///home/pilot/obsh75-evidence/proxy,file:///home/pilot/owner-receipts/OBSH.74-common-modules-20261113T1934Z/proxy,file:///opt/minimax-judge/gomodcache/cache/download",
+ "GOMODCACHE": "/home/pilot/P01.370-evidence/log-mask/cache/mod",
+ "GOCACHE": "/home/pilot/P01.370-evidence/log-mask/cache/build",
+ "GOPATH": "/home/pilot/P01.370-evidence/log-mask/cache/gopath"
+}

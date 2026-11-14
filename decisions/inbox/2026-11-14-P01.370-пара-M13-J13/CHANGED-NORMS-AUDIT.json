@@ -1,0 +1,2447 @@
+{
+ "C": "cde92cf79905c18a064732cde7917f52068c2cca",
+ "passport_sha256": "1210806ffc63425490f4d7e0069fc8b62c114ac608f94db30fb829ee530f3e5c",
+ "J_input_changed_paths_listed_exactly": true,
+ "J_input_changed_files": [
+  "Platform/01-store/acceptance/3/README.md",
+  "Platform/01-store/acceptance/3/scenarios.tsv",
+  "Platform/01-store/forms/code-rules.tsv",
+  "Platform/01-store/forms/production-input.schema.json",
+  "Platform/01-store/forms/production.tsv",
+  "Platform/01-store/forms/production/README.md",
+  "Platform/01-store/forms/production/bindings.tsv",
+  "Platform/01-store/forms/production/soak.json",
+  "Platform/01-store/forms/production/soak.schema.json",
+  "Platform/01-store/forms/production/threshold-approvals.json",
+  "Platform/01-store/forms/production/threshold-approvals.schema.json",
+  "Platform/01-store/forms/refusals.tsv",
+  "Platform/01-store/forms/stages.kit.tsv",
+  "Platform/01-store/forms/stages.tsv",
+  "Platform/01-store/forms/targets.routing.tsv",
+  "Platform/01-store/forms/targets.tsv",
+  "Platform/01-store/qualification/README.md",
+  "Platform/01-store/qualification/stand-procedures.md",
+  "Platform/01-store/spec/production-acceptance.md",
+  "Platform/01-store/vectors/jcs/README.md",
+  "Platform/01-store/vectors/jcs/canonical_json.tsv",
+  "Platform/01-store/vectors/rights-evaluator/README.cases.md",
+  "Platform/01-store/vectors/rights-evaluator/README.md",
+  "Platform/01-store/vectors/rights-evaluator/expect.tsv",
+  "Platform/01-store/vectors/rights-evaluator/rights.json",
+  "Platform/02-installer/forms/code-rules.tsv",
+  "Platform/02-installer/forms/refusals.tsv",
+  "Platform/02-installer/forms/stages.tsv",
+  "Platform/02-installer/forms/targets.routing.tsv",
+  "Platform/02-installer/forms/targets.tsv",
+  "Platform/03-worker/data/heartbeats.schema.json",
+  "Platform/03-worker/forms/README.md",
+  "Platform/03-worker/forms/code-rules.tsv",
+  "Platform/03-worker/forms/stages.kit.tsv",
+  "Platform/03-worker/forms/stages.tsv",
+  "Platform/03-worker/forms/targets.routing.tsv",
+  "Platform/03-worker/forms/targets.tsv",
+  "Platform/03-worker/forms/token-cache.machine.yaml",
+  "Platform/05-resource/forms/code-rules.tsv",
+  "Platform/06-console/forms/code-rules.tsv",
+  "Platform/common/acceptance/PROFILE.md",
+  "Platform/common/acceptance/README.md",
+  "Platform/common/acceptance/command-tables.md",
+  "Platform/common/acceptance/forms/code-rules.tsv",
+  "Platform/common/acceptance/forms/targets.routing.tsv",
+  "Platform/common/acceptance/runner-targets.tsv",
+  "Platform/common/acceptance/spec/acceptance.norms.md",
+  "Platform/common/contracts/jcs.md",
+  "Platform/common/contracts/json.md",
+  "Platform/common/contracts/rights-evaluator.md",
+  "Platform/common/modules.md",
+  "Platform/common/vectors/README.md",
+  "Platform/common/vectors/consumers.tsv",
+  "Platform/common/vectors/domain-token/README.cases.md",
+  "Platform/common/vectors/domain-token/README.md",
+  "Platform/common/vectors/door-token/README.cases.md",
+  "Platform/common/vectors/door-token/README.md",
+  "Platform/common/vectors/family-read/03.tsv",
+  "Platform/common/vectors/jcs/README.md",
+  "Platform/common/vectors/jcs/canonical_json.tsv",
+  "Platform/common/vectors/log-mask/README.cases.md",
+  "Platform/common/vectors/log-mask/cases.tsv",
+  "Platform/common/vectors/peer/README.md",
+  "Platform/common/vectors/rights-evaluator/README.cases.md",
+  "Platform/common/vectors/rights-evaluator/README.md",
+  "Platform/common/vectors/rights-evaluator/expect.tsv",
+  "Platform/common/vectors/rights-evaluator/rights.json",
+  "Platform/common/vectors/row-check/README.cases.md",
+  "Platform/common/vectors/row-check/README.md",
+  "Platform/common/vectors/sealing/README.cases.md",
+  "Platform/common/vectors/sealing/README.md",
+  "Platform/common/vectors/wire.tsv",
+  "Platform/common/versions/README.md",
+  "Platform/common/versions/go.mod",
+  "Platform/common/versions/go.sum"
+ ],
+ "journal": "decisions/inbox/2026-11-14-P01.370-пара-M13-J13/CHANGED-NORMS.md",
+ "journal_sha256": "0961cf27448036d15c6de12ab246879cb2ab4c56d8f56c924c09c26407c69a1d",
+ "baselines": {
+  "M8″": {
+   "old_C": "0fbe6e55ceb0b07e4a70727e813934a2f06edb1b",
+   "old_passport_sha256": "7219d7f1c2858f735c9b9a84efcee354b69a80ef9676d9241c17ae8b9b69eb80",
+   "changed_paragraphs": {
+    "P/01.1-R054": {
+     "file": "Platform/01-store/spec/01.1-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.1-R148": {
+     "file": "Platform/01-store/spec/01.1-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.1-R371": {
+     "file": "Platform/01-store/spec/01.1-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.2-R007": {
+     "file": "Platform/01-store/spec/01.2-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.2-R008": {
+     "file": "Platform/01-store/spec/01.2-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.2-R010": {
+     "file": "Platform/01-store/spec/01.2-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.2-R054": {
+     "file": "Platform/01-store/spec/01.2-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.2-R055": {
+     "file": "Platform/01-store/spec/01.2-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.3-R029": {
+     "file": "Platform/01-store/spec/01.3-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.3-R093": {
+     "file": "Platform/01-store/spec/01.3-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.3-R100": {
+     "file": "Platform/01-store/spec/01.3-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.3-R141": {
+     "file": "Platform/01-store/spec/01.3-store.norms.md",
+     "kind": "changed"
+    },
+    "P/01.3-R420": {
+     "file": "Platform/01-store/spec/01.3-store.norms.md",
+     "kind": "added"
+    },
+    "P/01.3-R421": {
+     "file": "Platform/01-store/spec/01.3-store.norms.md",
+     "kind": "added"
+    },
+    "P/01.3-R422": {
+     "file": "Platform/01-store/spec/01.3-store.norms.md",
+     "kind": "added"
+    },
+    "P/01.3-R423": {
+     "file": "Platform/01-store/spec/01.3-store.norms.md",
+     "kind": "added"
+    },
+    "P/01.3-R424": {
+     "file": "Platform/01-store/spec/01.3-store.norms.md",
+     "kind": "added"
+    },
+    "P/02.4-R274": {
+     "file": "Platform/02-installer/spec/02.4-installer.norms.md",
+     "kind": "changed"
+    },
+    "P/03.4-R034": {
+     "file": "Platform/03-worker/spec/03.4-worker.norms.md",
+     "kind": "changed"
+    },
+    "P/03.4-R054": {
+     "file": "Platform/03-worker/spec/03.4-worker.norms.md",
+     "kind": "changed"
+    },
+    "P/03.4-R066": {
+     "file": "Platform/03-worker/spec/03.4-worker.norms.md",
+     "kind": "changed"
+    },
+    "P/03.4-R069": {
+     "file": "Platform/03-worker/spec/03.4-worker.norms.md",
+     "kind": "changed"
+    },
+    "P/03.4-R071": {
+     "file": "Platform/03-worker/spec/03.4-worker.norms.md",
+     "kind": "changed"
+    },
+    "P/03.4-R094": {
+     "file": "Platform/03-worker/spec/03.4-worker.norms.md",
+     "kind": "changed"
+    },
+    "P/03.4-R097": {
+     "file": "Platform/03-worker/spec/03.4-worker.norms.md",
+     "kind": "changed"
+    },
+    "P/03.4-R200": {
+     "file": "Platform/03-worker/spec/03.4-worker.norms.md",
+     "kind": "changed"
+    },
+    "P/03.6-R058": {
+     "file": "Platform/03-worker/spec/03.6-worker.norms.md",
+     "kind": "changed"
+    },
+    "P/03.6-R064": {
+     "file": "Platform/03-worker/spec/03.6-worker.norms.md",
+     "kind": "changed"
+    },
+    "P/03.6-R155": {
+     "file": "Platform/03-worker/spec/03.6-worker.norms.md",
+     "kind": "changed"
+    },
+    "P/03.6-R159": {
+     "file": "Platform/03-worker/spec/03.6-worker.norms.md",
+     "kind": "changed"
+    },
+    "P/04-R006": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "changed"
+    },
+    "P/04-R062": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "changed"
+    },
+    "P/04-R164": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "changed"
+    },
+    "P/04-R174": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "changed"
+    },
+    "P/04-R266": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "changed"
+    },
+    "P/04-R269": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "changed"
+    },
+    "P/04-R292": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "changed"
+    },
+    "P/04-R327": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "changed"
+    },
+    "P/04-R437": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "changed"
+    },
+    "P/04-R452": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "changed"
+    },
+    "P/04-R558": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "added"
+    },
+    "P/04-R559": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "added"
+    },
+    "P/04-R560": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "added"
+    },
+    "P/04-R561": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "added"
+    },
+    "P/04-R562": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "added"
+    },
+    "P/04-R563": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "added"
+    },
+    "P/04-R564": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "added"
+    },
+    "P/04-R565": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "added"
+    },
+    "P/04-R566": {
+     "file": "Platform/04-controller/spec/04-controller.norms.md",
+     "kind": "added"
+    },
+    "P/06.1-R027": {
+     "file": "Platform/06-console/spec/06.1-console.norms.md",
+     "kind": "changed"
+    },
+    "P/06.1-R120": {
+     "file": "Platform/06-console/spec/06.1-console.norms.md",
+     "kind": "changed"
+    }
+   },
+   "history_evidence": {
+    "P/01.1-R054": [
+     {
+      "history": "decisions/journal/platform/01-store/history-1.tsv",
+      "line": 443,
+      "req_id": "P/01.1-R054",
+      "file": "spec/01.1-store.norms.md#N2.1"
+     }
+    ],
+    "P/01.1-R148": [
+     {
+      "history": "decisions/journal/platform/01-store/history-1.tsv",
+      "line": 433,
+      "req_id": "P/01.1-R148",
+      "file": "spec/01.1-store.norms.md#N3"
+     }
+    ],
+    "P/01.1-R371": [
+     {
+      "history": "decisions/journal/platform/01-store/history-1.tsv",
+      "line": 434,
+      "req_id": "P/01.1-R371",
+      "file": "spec/01.1-store.norms.md#N3"
+     }
+    ],
+    "P/01.2-R007": [
+     {
+      "history": "decisions/journal/platform/01-store/history-2.tsv",
+      "line": 133,
+      "req_id": "P/01.2-R007",
+      "file": "spec/01.2-store.norms.md#N1.2"
+     }
+    ],
+    "P/01.2-R008": [
+     {
+      "history": "decisions/journal/platform/01-store/history-2.tsv",
+      "line": 129,
+      "req_id": "P/01.2-R008",
+      "file": "spec/01.2-store.norms.md#N1.2"
+     }
+    ],
+    "P/01.2-R010": [
+     {
+      "history": "decisions/journal/platform/01-store/history-2.tsv",
+      "line": 132,
+      "req_id": "P/01.2-R010",
+      "file": "spec/01.2-store.norms.md#N1.3"
+     }
+    ],
+    "P/01.2-R054": [
+     {
+      "history": "decisions/journal/platform/01-store/history-2.tsv",
+      "line": 130,
+      "req_id": "P/01.2-R054",
+      "file": "spec/01.2-store.norms.md#N1.2"
+     }
+    ],
+    "P/01.2-R055": [
+     {
+      "history": "decisions/journal/platform/01-store/history-2.tsv",
+      "line": 131,
+      "req_id": "P/01.2-R055",
+      "file": "spec/01.2-store.norms.md#N1.2"
+     }
+    ],
+    "P/01.3-R029": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 706,
+      "req_id": "P/01.3-R029",
+      "file": "spec/01.3-store.norms.md#N4"
+     }
+    ],
+    "P/01.3-R093": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 694,
+      "req_id": "P/01.3-R093",
+      "file": "spec/01.3-store.norms.md#N1.3"
+     }
+    ],
+    "P/01.3-R100": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 695,
+      "req_id": "P/01.3-R100",
+      "file": "spec/01.3-store.norms.md#N1.3"
+     }
+    ],
+    "P/01.3-R141": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 696,
+      "req_id": "P/01.3-R141",
+      "file": "spec/01.3-store.norms.md#N1.3"
+     }
+    ],
+    "P/01.3-R420": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 687,
+      "req_id": "P/01.3-R420",
+      "file": "spec/01.3-store.norms.md#N3"
+     }
+    ],
+    "P/01.3-R421": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 688,
+      "req_id": "P/01.3-R421",
+      "file": "spec/01.3-store.norms.md#N3"
+     }
+    ],
+    "P/01.3-R422": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 689,
+      "req_id": "P/01.3-R422",
+      "file": "spec/01.3-store.norms.md#N3"
+     }
+    ],
+    "P/01.3-R423": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 690,
+      "req_id": "P/01.3-R423",
+      "file": "spec/01.3-store.norms.md#N3"
+     }
+    ],
+    "P/01.3-R424": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 702,
+      "req_id": "P/01.3-R424",
+      "file": "spec/01.3-store.norms.md#N1.3"
+     }
+    ],
+    "P/02.4-R274": [
+     {
+      "history": "decisions/journal/platform/02-installer/history-4.tsv",
+      "line": 542,
+      "req_id": "P/02.4-R274",
+      "file": "spec/02.4-installer.norms.md#N1.9"
+     }
+    ],
+    "P/03.4-R034": [
+     {
+      "history": "decisions/journal/platform/03-worker/history-4.tsv",
+      "line": 195,
+      "req_id": "P/03.4-R034",
+      "file": "spec/03.4-worker.norms.md#N5"
+     }
+    ],
+    "P/03.4-R054": [
+     {
+      "history": "decisions/journal/platform/03-worker/history-4.tsv",
+      "line": 190,
+      "req_id": "P/03.4-R054",
+      "file": "spec/03.4-worker.norms.md#N1.1"
+     }
+    ],
+    "P/03.4-R066": [
+     {
+      "history": "decisions/journal/platform/03-worker/history-4.tsv",
+      "line": 191,
+      "req_id": "P/03.4-R066",
+      "file": "spec/03.4-worker.norms.md#N1.1"
+     },
+     {
+      "history": "decisions/journal/platform/03-worker/history-4.tsv",
+      "line": 206,
+      "req_id": "P/03.4-R066",
+      "file": "spec/03.4-worker.norms.md#N1"
+     },
+     {
+      "history": "decisions/journal/platform/03-worker/history-4.tsv",
+      "line": 207,
+      "req_id": "P/03.4-R066",
+      "file": "spec/03.4-worker.norms.md#N1"
+     }
+    ],
+    "P/03.4-R069": [
+     {
+      "history": "decisions/journal/platform/03-worker/history-4.tsv",
+      "line": 192,
+      "req_id": "P/03.4-R069",
+      "file": "spec/03.4-worker.norms.md#N1.1"
+     }
+    ],
+    "P/03.4-R071": [
+     {
+      "history": "decisions/journal/platform/03-worker/history-4.tsv",
+      "line": 193,
+      "req_id": "P/03.4-R071",
+      "file": "spec/03.4-worker.norms.md#N1.1"
+     }
+    ],
+    "P/03.4-R094": [
+     {
+      "history": "decisions/journal/platform/03-worker/history-4.tsv",
+      "line": 186,
+      "req_id": "P/03.4-R094",
+      "file": "spec/03.4-worker.norms.md#N1.2"
+     }
+    ],
+    "P/03.4-R097": [
+     {
+      "history": "decisions/journal/platform/03-worker/history-4.tsv",
+      "line": 187,
+      "req_id": "P/03.4-R097",
+      "file": "spec/03.4-worker.norms.md#N1.2"
+     }
+    ],
+    "P/03.4-R200": [
+     {
+      "history": "decisions/journal/platform/03-worker/history-4.tsv",
+      "line": 194,
+      "req_id": "P/03.4-R200",
+      "file": "spec/03.4-worker.norms.md#N3"
+     }
+    ],
+    "P/03.6-R058": [
+     {
+      "history": "decisions/journal/platform/03-worker/history-6.tsv",
+      "line": 178,
+      "req_id": "P/03.6-R058",
+      "file": "spec/03.6-worker.norms.md#N1.2"
+     }
+    ],
+    "P/03.6-R064": [
+     {
+      "history": "decisions/journal/platform/03-worker/history-6.tsv",
+      "line": 179,
+      "req_id": "P/03.6-R064",
+      "file": "spec/03.6-worker.norms.md#N1.2"
+     }
+    ],
+    "P/03.6-R155": [
+     {
+      "history": "decisions/journal/platform/03-worker/history-6.tsv",
+      "line": 180,
+      "req_id": "P/03.6-R155",
+      "file": "spec/03.6-worker.norms.md#N3"
+     }
+    ],
+    "P/03.6-R159": [
+     {
+      "history": "decisions/journal/platform/03-worker/history-6.tsv",
+      "line": 181,
+      "req_id": "P/03.6-R159",
+      "file": "spec/03.6-worker.norms.md#N3"
+     }
+    ],
+    "P/04-R006": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 795,
+      "req_id": "P/04-R006",
+      "file": "spec/04-controller.norms.md#N1.1"
+     }
+    ],
+    "P/04-R062": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 810,
+      "req_id": "P/04-R062",
+      "file": "spec/04-controller.norms.md#N3"
+     }
+    ],
+    "P/04-R164": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 781,
+      "req_id": "P/04-R164",
+      "file": "spec/04-controller.norms.md#N1.3"
+     }
+    ],
+    "P/04-R174": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 800,
+      "req_id": "P/04-R174",
+      "file": "spec/04-controller.norms.md#N1.3b"
+     }
+    ],
+    "P/04-R266": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 803,
+      "req_id": "P/04-R266",
+      "file": "spec/04-controller.norms.md#N3"
+     }
+    ],
+    "P/04-R269": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 804,
+      "req_id": "P/04-R269",
+      "file": "spec/04-controller.norms.md#N3"
+     }
+    ],
+    "P/04-R292": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 805,
+      "req_id": "P/04-R292",
+      "file": "spec/04-controller.norms.md#N3"
+     }
+    ],
+    "P/04-R327": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 807,
+      "req_id": "-",
+      "file": "spec/04-controller.norms.md#N3"
+     }
+    ],
+    "P/04-R437": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 766,
+      "req_id": "P/04-R437",
+      "file": "spec/04-controller.norms.md#N5"
+     }
+    ],
+    "P/04-R452": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 767,
+      "req_id": "P/04-R452",
+      "file": "spec/04-controller.norms.md#N5"
+     }
+    ],
+    "P/04-R558": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 808,
+      "req_id": "P/04-R558",
+      "file": "spec/04-controller.norms.md#N3"
+     }
+    ],
+    "P/04-R559": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 809,
+      "req_id": "P/04-R559",
+      "file": "spec/04-controller.norms.md#N3"
+     }
+    ],
+    "P/04-R560": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 796,
+      "req_id": "P/04-R560",
+      "file": "spec/04-controller.norms.md#N1.2"
+     }
+    ],
+    "P/04-R561": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 799,
+      "req_id": "P/04-R561",
+      "file": "spec/04-controller.norms.md#N1.3a"
+     }
+    ],
+    "P/04-R562": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 797,
+      "req_id": "P/04-R562",
+      "file": "spec/04-controller.norms.md#N1.2"
+     }
+    ],
+    "P/04-R563": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 806,
+      "req_id": "P/04-R563",
+      "file": "spec/04-controller.norms.md#N3"
+     }
+    ],
+    "P/04-R564": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 811,
+      "req_id": "P/04-R564",
+      "file": "spec/04-controller.norms.md#N4"
+     }
+    ],
+    "P/04-R565": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 802,
+      "req_id": "P/04-R565",
+      "file": "spec/04-controller.norms.md#N3"
+     }
+    ],
+    "P/04-R566": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 798,
+      "req_id": "P/04-R566",
+      "file": "spec/04-controller.norms.md#N1.3"
+     }
+    ],
+    "P/06.1-R027": [
+     {
+      "history": "decisions/journal/platform/06-console/history-1.tsv",
+      "line": 496,
+      "req_id": "P/06.1-R027",
+      "file": "spec/06.1-console.norms.md#N3"
+     },
+     {
+      "history": "decisions/journal/platform/06-console/history-1.tsv",
+      "line": 500,
+      "req_id": "P/06.1-R027",
+      "file": "spec/06.1-console.norms.md#N3"
+     }
+    ],
+    "P/06.1-R120": [
+     {
+      "history": "decisions/journal/platform/06-console/history-1.tsv",
+      "line": 495,
+      "req_id": "P/06.1-R120",
+      "file": "spec/06.1-console.norms.md#N1.4"
+     },
+     {
+      "history": "decisions/journal/platform/06-console/history-1.tsv",
+      "line": 499,
+      "req_id": "P/06.1-R120",
+      "file": "spec/06.1-console.norms.md#N1.4"
+     }
+    ]
+   },
+   "changed_checklist_items": {
+    "P/01.1-32": "Platform/01-store/spec/01.1-store.norms.md",
+    "P/01.2-03": "Platform/01-store/spec/01.2-store.norms.md",
+    "P/01.3-06": "Platform/01-store/spec/01.3-store.norms.md",
+    "P/01.3-12": "Platform/01-store/spec/01.3-store.norms.md",
+    "P/01.3-13": "Platform/01-store/spec/01.3-store.norms.md",
+    "P/01.3-15": "Platform/01-store/spec/01.3-store.norms.md",
+    "P/01.3-16": "Platform/01-store/spec/01.3-store.norms.md",
+    "P/02.4-09": "Platform/02-installer/spec/02.4-installer.norms.md",
+    "P/03.4-18": "Platform/03-worker/spec/03.4-worker.norms.md",
+    "P/04-02": "Platform/04-controller/spec/04-controller.norms.md",
+    "P/04-10": "Platform/04-controller/spec/04-controller.norms.md",
+    "P/04-13": "Platform/04-controller/spec/04-controller.norms.md",
+    "P/04-14": "Platform/04-controller/spec/04-controller.norms.md",
+    "P/04-19": "Platform/04-controller/spec/04-controller.norms.md",
+    "P/06.1-12": "Platform/06-console/spec/06.1-console.norms.md"
+   },
+   "checklist_history_evidence": {
+    "P/01.1-32": [
+     {
+      "history": "decisions/journal/platform/01-store/history-1.tsv",
+      "line": 441,
+      "req_id": "P/01.1-R151",
+      "file": "spec/01.1-store.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/01.2-03": [
+     {
+      "history": "decisions/journal/platform/01-store/history-2.tsv",
+      "line": 137,
+      "req_id": "-",
+      "file": "spec/01.2-store.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/01.3-06": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 700,
+      "req_id": "-",
+      "file": "spec/01.3-store.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/01.3-12": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 681,
+      "req_id": "-",
+      "file": "spec/01.3-store.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/01.3-13": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 682,
+      "req_id": "-",
+      "file": "spec/01.3-store.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/01.3-15": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 685,
+      "req_id": "-",
+      "file": "spec/01.3-store.norms.md#readiness-checklist",
+      "binding": "new_item_insertion_at_checklist_heading"
+     }
+    ],
+    "P/01.3-16": [
+     {
+      "history": "decisions/journal/platform/01-store/history-3.tsv",
+      "line": 685,
+      "req_id": "-",
+      "file": "spec/01.3-store.norms.md#readiness-checklist",
+      "binding": "new_item_insertion_at_checklist_heading"
+     }
+    ],
+    "P/02.4-09": [
+     {
+      "history": "decisions/journal/platform/02-installer/history-4.tsv",
+      "line": 546,
+      "req_id": "-",
+      "file": "spec/02.4-installer.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/03.4-18": [
+     {
+      "history": "decisions/journal/platform/03-worker/history-4.tsv",
+      "line": 196,
+      "req_id": "-",
+      "file": "spec/03.4-worker.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/04-02": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 769,
+      "req_id": "-",
+      "file": "spec/04-controller.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/04-10": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 770,
+      "req_id": "-",
+      "file": "spec/04-controller.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/04-13": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 813,
+      "req_id": "-",
+      "file": "spec/04-controller.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/04-14": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 771,
+      "req_id": "-",
+      "file": "spec/04-controller.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/04-19": [
+     {
+      "history": "decisions/journal/platform/04-controller/history.tsv",
+      "line": 772,
+      "req_id": "-",
+      "file": "spec/04-controller.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ],
+    "P/06.1-12": [
+     {
+      "history": "decisions/journal/platform/06-console/history-1.tsv",
+      "line": 497,
+      "req_id": "-",
+      "file": "spec/06.1-console.norms.md#readiness-checklist",
+      "binding": "id_or_exact_removed_text"
+     }
+    ]
+   },
+   "changed_M_files_evidence": {
+    "Platform/01-store/README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 688,
+       "req_id": "-",
+       "file": "README.md#what-this-lesson-takes-from-common"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 748,
+       "req_id": "-",
+       "file": "README.md#what-this-lesson-takes-from-common"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce",
+      "2fd1ac98efff18cb3904fdea87c841efa9d48ba2",
+      "88631f3131a48ad32241d43ed06815e03096b5cc",
+      "0dba10686824071ce4604eda0736bf57ddbbe9d9"
+     ],
+     "diff_sha256": "a8348f732e9fb027a1754c122b5e398fbf65471443a341bfa1fecbb12d1e1a24"
+    },
+    "Platform/01-store/acceptance/3/README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 692,
+       "req_id": "-",
+       "file": "acceptance/3/README.md#deterministic-recovery-and-checkpoint-faults"
+      }
+     ],
+     "change_commits": [
+      "238e239513c7ae04d2bb1dac950e163a281e17ec"
+     ],
+     "diff_sha256": "12ca1fe0dd667a48c83da53bd2c8a0d9a812e4af11e5c073f447c107fab9acdc"
+    },
+    "Platform/01-store/forms/code-rules.tsv": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 749,
+       "req_id": "-",
+       "file": "forms/code-rules.tsv#row:C25"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 750,
+       "req_id": "-",
+       "file": "forms/code-rules.tsv#row:C26"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 751,
+       "req_id": "-",
+       "file": "forms/code-rules.tsv#row:C27"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 752,
+       "req_id": "-",
+       "file": "forms/code-rules.tsv#row:C28"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 753,
+       "req_id": "-",
+       "file": "forms/code-rules.tsv#row:C29"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce"
+     ],
+     "diff_sha256": "2d5b5f60ddd1a842d0d8d3414432367ab3a83970e6e7bc30954b6142bbf9ae4c"
+    },
+    "Platform/01-store/forms/refusals.tsv": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 804,
+       "req_id": "P/01.3-R424",
+       "file": "forms/refusals.tsv#row:name=start_journal_corrupt"
+      }
+     ],
+     "change_commits": [
+      "891356cdd7df3e77fa9218bce8bafdff5d6ff468"
+     ],
+     "diff_sha256": "de1a4561b8a0e82be69bc50c10c444d74e9758aa5577fb3a9878d4a030e36a4b"
+    },
+    "Platform/01-store/forms/stages.tsv": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 702,
+       "req_id": "-",
+       "file": "forms/stages.tsv#row:9"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 703,
+       "req_id": "-",
+       "file": "forms/stages.tsv#row:10"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 704,
+       "req_id": "-",
+       "file": "forms/stages.tsv#row:11"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 754,
+       "req_id": "-",
+       "file": "forms/stages.tsv#row:7"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 755,
+       "req_id": "-",
+       "file": "forms/stages.tsv#row:8"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce",
+      "2fd1ac98efff18cb3904fdea87c841efa9d48ba2",
+      "88631f3131a48ad32241d43ed06815e03096b5cc",
+      "0dba10686824071ce4604eda0736bf57ddbbe9d9"
+     ],
+     "diff_sha256": "bf2db43f3d713c05e5e43bb4841c8e8a5269bc78e2af515ff7ddc7024cb96b37"
+    },
+    "Platform/01-store/forms/targets.tsv": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "969963645f5b9c8bb95bd5265d267ed621154131fe9d48a33e552390b4ea6ee7"
+    },
+    "Platform/01-store/spec/01-store.README.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "71752fd68131a3ae6d4f23a7a504a6ee2539fd0d6369a3cbdb78837c6947270d"
+    },
+    "Platform/01-store/spec/01.1-store.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history-1.tsv",
+       "line": 433,
+       "req_id": "P/01.1-R148",
+       "file": "spec/01.1-store.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-1.tsv",
+       "line": 434,
+       "req_id": "P/01.1-R371",
+       "file": "spec/01.1-store.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-1.tsv",
+       "line": 437,
+       "req_id": "-",
+       "file": "spec/01.1-store.norms.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-1.tsv",
+       "line": 438,
+       "req_id": "-",
+       "file": "spec/01.1-store.norms.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-1.tsv",
+       "line": 441,
+       "req_id": "P/01.1-R151",
+       "file": "spec/01.1-store.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-1.tsv",
+       "line": 443,
+       "req_id": "P/01.1-R054",
+       "file": "spec/01.1-store.norms.md#N2.1"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-1.tsv",
+       "line": 444,
+       "req_id": "-",
+       "file": "spec/01.1-store.norms.md#implementation-decides"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-1.tsv",
+       "line": 445,
+       "req_id": "-",
+       "file": "spec/01.1-store.norms.md#implementation-decides"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-1.tsv",
+       "line": 446,
+       "req_id": "-",
+       "file": "spec/01.1-store.norms.md#implementation-decides"
+      }
+     ],
+     "change_commits": [
+      "5f65f758177e29b405593796d8f6aee4c7fbac4f",
+      "0dba10686824071ce4604eda0736bf57ddbbe9d9"
+     ],
+     "diff_sha256": "da5eeb7b6e4dcc243acefddae987a24fc744cb182e44960d9d9f385307f41380"
+    },
+    "Platform/01-store/spec/01.2-store.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history-2.tsv",
+       "line": 129,
+       "req_id": "P/01.2-R008",
+       "file": "spec/01.2-store.norms.md#N1.2"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-2.tsv",
+       "line": 130,
+       "req_id": "P/01.2-R054",
+       "file": "spec/01.2-store.norms.md#N1.2"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-2.tsv",
+       "line": 131,
+       "req_id": "P/01.2-R055",
+       "file": "spec/01.2-store.norms.md#N1.2"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-2.tsv",
+       "line": 132,
+       "req_id": "P/01.2-R010",
+       "file": "spec/01.2-store.norms.md#N1.3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-2.tsv",
+       "line": 133,
+       "req_id": "P/01.2-R007",
+       "file": "spec/01.2-store.norms.md#N1.2"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-2.tsv",
+       "line": 134,
+       "req_id": "-",
+       "file": "spec/01.2-store.norms.md#implementation-decides"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-2.tsv",
+       "line": 137,
+       "req_id": "-",
+       "file": "spec/01.2-store.norms.md#readiness-checklist"
+      }
+     ],
+     "change_commits": [
+      "5f65f758177e29b405593796d8f6aee4c7fbac4f",
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "9d2379ca7de15a12399ee23af7ab2ee8623677f6fddcc3972c9ca251c2314358"
+    },
+    "Platform/01-store/spec/01.3-store.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 673,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 675,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 676,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 677,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 681,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 682,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 685,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 687,
+       "req_id": "P/01.3-R420",
+       "file": "spec/01.3-store.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 688,
+       "req_id": "P/01.3-R421",
+       "file": "spec/01.3-store.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 689,
+       "req_id": "P/01.3-R422",
+       "file": "spec/01.3-store.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 690,
+       "req_id": "P/01.3-R423",
+       "file": "spec/01.3-store.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 694,
+       "req_id": "P/01.3-R093",
+       "file": "spec/01.3-store.norms.md#N1.3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 695,
+       "req_id": "P/01.3-R100",
+       "file": "spec/01.3-store.norms.md#N1.3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 696,
+       "req_id": "P/01.3-R141",
+       "file": "spec/01.3-store.norms.md#N1.3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 700,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 702,
+       "req_id": "P/01.3-R424",
+       "file": "spec/01.3-store.norms.md#N1.3"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 704,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 706,
+       "req_id": "P/01.3-R029",
+       "file": "spec/01.3-store.norms.md#N4"
+      },
+      {
+       "history": "decisions/journal/platform/01-store/history-3.tsv",
+       "line": 708,
+       "req_id": "-",
+       "file": "spec/01.3-store.norms.md#intro"
+      }
+     ],
+     "change_commits": [
+      "891356cdd7df3e77fa9218bce8bafdff5d6ff468",
+      "5f65f758177e29b405593796d8f6aee4c7fbac4f",
+      "0dba10686824071ce4604eda0736bf57ddbbe9d9"
+     ],
+     "diff_sha256": "80da1b93aac867249899daf0d0b724cd78c49ca9bd84446a9c1b611030a65410"
+    },
+    "Platform/01-store/spec/production-acceptance.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/01-store/history.tsv",
+       "line": 686,
+       "req_id": "-",
+       "file": "spec/production-acceptance.md#performance-goals"
+      }
+     ],
+     "change_commits": [
+      "0dba10686824071ce4604eda0736bf57ddbbe9d9"
+     ],
+     "diff_sha256": "e705932ab796e7fde6743bcbf31b0d0b9a3d8334de1b919f783aa6a330c74c75"
+    },
+    "Platform/01-store/vectors/jcs/README.md": {
+     "kind": "removed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "02b6128b1b35d7e928a377656ee816065b1b149c51f9c888eec4692e2b955fe6"
+    },
+    "Platform/01-store/vectors/rights-evaluator/README.md": {
+     "kind": "removed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "d3a8cab05cbcb576b50bfb59fa2c89417ed28103752bb0290fafb3e58bd05830"
+    },
+    "Platform/02-installer/spec/02.4-installer.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/02-installer/history-4.tsv",
+       "line": 542,
+       "req_id": "P/02.4-R274",
+       "file": "spec/02.4-installer.norms.md#N1.9"
+      },
+      {
+       "history": "decisions/journal/platform/02-installer/history-4.tsv",
+       "line": 544,
+       "req_id": "-",
+       "file": "spec/02.4-installer.norms.md#implementation-decides"
+      },
+      {
+       "history": "decisions/journal/platform/02-installer/history-4.tsv",
+       "line": 546,
+       "req_id": "-",
+       "file": "spec/02.4-installer.norms.md#readiness-checklist"
+      }
+     ],
+     "change_commits": [
+      "ea3933497ab8193246ae45f10beead19473cdb5b"
+     ],
+     "diff_sha256": "7fa182d4f637354c06b54923e90c01b6d5673ed4a1b774261e30407df02a5f8c"
+    },
+    "Platform/02-installer/spec/02.5-installer.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/02-installer/history-5.tsv",
+       "line": 259,
+       "req_id": "-",
+       "file": "spec/02.5-installer.norms.md#implementation-decides"
+      }
+     ],
+     "change_commits": [
+      "ea3933497ab8193246ae45f10beead19473cdb5b"
+     ],
+     "diff_sha256": "9d3a2f1b491a9f56a6dd05d4f1aaaa1219e8e2943ddfec42391fd7410d73f4ac"
+    },
+    "Platform/03-worker/spec/03.4-worker.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/03-worker/history-4.tsv",
+       "line": 186,
+       "req_id": "P/03.4-R094",
+       "file": "spec/03.4-worker.norms.md#N1.2"
+      },
+      {
+       "history": "decisions/journal/platform/03-worker/history-4.tsv",
+       "line": 187,
+       "req_id": "P/03.4-R097",
+       "file": "spec/03.4-worker.norms.md#N1.2"
+      },
+      {
+       "history": "decisions/journal/platform/03-worker/history-4.tsv",
+       "line": 190,
+       "req_id": "P/03.4-R054",
+       "file": "spec/03.4-worker.norms.md#N1.1"
+      },
+      {
+       "history": "decisions/journal/platform/03-worker/history-4.tsv",
+       "line": 191,
+       "req_id": "P/03.4-R066",
+       "file": "spec/03.4-worker.norms.md#N1.1"
+      },
+      {
+       "history": "decisions/journal/platform/03-worker/history-4.tsv",
+       "line": 192,
+       "req_id": "P/03.4-R069",
+       "file": "spec/03.4-worker.norms.md#N1.1"
+      },
+      {
+       "history": "decisions/journal/platform/03-worker/history-4.tsv",
+       "line": 193,
+       "req_id": "P/03.4-R071",
+       "file": "spec/03.4-worker.norms.md#N1.1"
+      },
+      {
+       "history": "decisions/journal/platform/03-worker/history-4.tsv",
+       "line": 194,
+       "req_id": "P/03.4-R200",
+       "file": "spec/03.4-worker.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/03-worker/history-4.tsv",
+       "line": 195,
+       "req_id": "P/03.4-R034",
+       "file": "spec/03.4-worker.norms.md#N5"
+      },
+      {
+       "history": "decisions/journal/platform/03-worker/history-4.tsv",
+       "line": 196,
+       "req_id": "-",
+       "file": "spec/03.4-worker.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/03-worker/history-4.tsv",
+       "line": 206,
+       "req_id": "P/03.4-R066",
+       "file": "spec/03.4-worker.norms.md#N1"
+      },
+      {
+       "history": "decisions/journal/platform/03-worker/history-4.tsv",
+       "line": 207,
+       "req_id": "P/03.4-R066",
+       "file": "spec/03.4-worker.norms.md#N1"
+      }
+     ],
+     "change_commits": [
+      "fd476686072dfd05b1f67af50e7b7924130ecfc1"
+     ],
+     "diff_sha256": "3cffaeb25a90981c6701293d702425668e9de81b8a202bfcdfd58a99ffa0c48c"
+    },
+    "Platform/03-worker/spec/03.6-worker.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/03-worker/history-6.tsv",
+       "line": 178,
+       "req_id": "P/03.6-R058",
+       "file": "spec/03.6-worker.norms.md#N1.2"
+      },
+      {
+       "history": "decisions/journal/platform/03-worker/history-6.tsv",
+       "line": 179,
+       "req_id": "P/03.6-R064",
+       "file": "spec/03.6-worker.norms.md#N1.2"
+      },
+      {
+       "history": "decisions/journal/platform/03-worker/history-6.tsv",
+       "line": 180,
+       "req_id": "P/03.6-R155",
+       "file": "spec/03.6-worker.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/03-worker/history-6.tsv",
+       "line": 181,
+       "req_id": "P/03.6-R159",
+       "file": "spec/03.6-worker.norms.md#N3"
+      }
+     ],
+     "change_commits": [
+      "fd476686072dfd05b1f67af50e7b7924130ecfc1"
+     ],
+     "diff_sha256": "1cc725b0f8f2f7cb1ee71a28f35d66db516b1e37e0b7f5445f9d726da0561949"
+    },
+    "Platform/04-controller/spec/04-controller.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 766,
+       "req_id": "P/04-R437",
+       "file": "spec/04-controller.norms.md#N5"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 767,
+       "req_id": "P/04-R452",
+       "file": "spec/04-controller.norms.md#N5"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 768,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#implementation-decides"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 769,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 770,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 771,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 772,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 773,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#evidence-outside-tsv"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 781,
+       "req_id": "P/04-R164",
+       "file": "spec/04-controller.norms.md#N1.3"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 782,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#implementation-decides"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 789,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#index"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 790,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#index"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 791,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#index"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 792,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#index"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 793,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#index"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 794,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#index"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 795,
+       "req_id": "P/04-R006",
+       "file": "spec/04-controller.norms.md#N1.1"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 796,
+       "req_id": "P/04-R560",
+       "file": "spec/04-controller.norms.md#N1.2"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 797,
+       "req_id": "P/04-R562",
+       "file": "spec/04-controller.norms.md#N1.2"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 798,
+       "req_id": "P/04-R566",
+       "file": "spec/04-controller.norms.md#N1.3"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 799,
+       "req_id": "P/04-R561",
+       "file": "spec/04-controller.norms.md#N1.3a"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 800,
+       "req_id": "P/04-R174",
+       "file": "spec/04-controller.norms.md#N1.3b"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 801,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#data-families-built-from-the-standard-files"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 802,
+       "req_id": "P/04-R565",
+       "file": "spec/04-controller.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 803,
+       "req_id": "P/04-R266",
+       "file": "spec/04-controller.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 804,
+       "req_id": "P/04-R269",
+       "file": "spec/04-controller.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 805,
+       "req_id": "P/04-R292",
+       "file": "spec/04-controller.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 806,
+       "req_id": "P/04-R563",
+       "file": "spec/04-controller.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 807,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 808,
+       "req_id": "P/04-R558",
+       "file": "spec/04-controller.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 809,
+       "req_id": "P/04-R559",
+       "file": "spec/04-controller.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 810,
+       "req_id": "P/04-R062",
+       "file": "spec/04-controller.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 811,
+       "req_id": "P/04-R564",
+       "file": "spec/04-controller.norms.md#N4"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 812,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#implementation-decides"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 813,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/04-controller/history.tsv",
+       "line": 814,
+       "req_id": "-",
+       "file": "spec/04-controller.norms.md#evidence-outside-tsv"
+      }
+     ],
+     "change_commits": [
+      "89f22eb90261229e4bc04bbff1aa93ba0e1709bf",
+      "e5d503349c61125410e1319a86049b954ff2dca2",
+      "ae9407724d7c90d51febe3a28e5b56c1bf687bd7"
+     ],
+     "diff_sha256": "97fe428dee4da4c6f8d01d0ded6b807f0c486618df6f8d79b3b39f5890a0538d"
+    },
+    "Platform/06-console/spec/06.1-console.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/06-console/history-1.tsv",
+       "line": 493,
+       "req_id": "-",
+       "file": "spec/06.1-console.norms.md#implementation-decides"
+      },
+      {
+       "history": "decisions/journal/platform/06-console/history-1.tsv",
+       "line": 494,
+       "req_id": "-",
+       "file": "spec/06.1-console.norms.md#implementation-decides"
+      },
+      {
+       "history": "decisions/journal/platform/06-console/history-1.tsv",
+       "line": 495,
+       "req_id": "P/06.1-R120",
+       "file": "spec/06.1-console.norms.md#N1.4"
+      },
+      {
+       "history": "decisions/journal/platform/06-console/history-1.tsv",
+       "line": 496,
+       "req_id": "P/06.1-R027",
+       "file": "spec/06.1-console.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/06-console/history-1.tsv",
+       "line": 497,
+       "req_id": "-",
+       "file": "spec/06.1-console.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/06-console/history-1.tsv",
+       "line": 498,
+       "req_id": "-",
+       "file": "spec/06.1-console.norms.md#N5"
+      },
+      {
+       "history": "decisions/journal/platform/06-console/history-1.tsv",
+       "line": 499,
+       "req_id": "P/06.1-R120",
+       "file": "spec/06.1-console.norms.md#N1.4"
+      },
+      {
+       "history": "decisions/journal/platform/06-console/history-1.tsv",
+       "line": 500,
+       "req_id": "P/06.1-R027",
+       "file": "spec/06.1-console.norms.md#N3"
+      },
+      {
+       "history": "decisions/journal/platform/06-console/history-1.tsv",
+       "line": 501,
+       "req_id": "-",
+       "file": "spec/06.1-console.norms.md#readiness-checklist"
+      },
+      {
+       "history": "decisions/journal/platform/06-console/history-1.tsv",
+       "line": 502,
+       "req_id": "-",
+       "file": "spec/06.1-console.norms.md#N5"
+      }
+     ],
+     "change_commits": [
+      "3ceb2653df4b9ca0ff84d8d7515aab46fde88167"
+     ],
+     "diff_sha256": "579dfb5b1853e0acd08d6f67241aae3ec6048aac66752f6624708b1542e44a20"
+    },
+    "Platform/06-console/spec/06.2-console.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/06-console/history-2.tsv",
+       "line": 211,
+       "req_id": "-",
+       "file": "spec/06.2-console.norms.md#implementation-decides"
+      },
+      {
+       "history": "decisions/journal/platform/06-console/history-2.tsv",
+       "line": 212,
+       "req_id": "-",
+       "file": "spec/06.2-console.norms.md#implementation-decides"
+      }
+     ],
+     "change_commits": [
+      "3ceb2653df4b9ca0ff84d8d7515aab46fde88167"
+     ],
+     "diff_sha256": "9b9343d6831d2c35d9da2fbd3e42b0705894557aa8bd4ef1bffecac497941c20"
+    },
+    "Platform/06-console/spec/06.3-console.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/06-console/history-3.tsv",
+       "line": 176,
+       "req_id": "-",
+       "file": "spec/06.3-console.norms.md#implementation-decides"
+      },
+      {
+       "history": "decisions/journal/platform/06-console/history-3.tsv",
+       "line": 177,
+       "req_id": "-",
+       "file": "spec/06.3-console.norms.md#implementation-decides"
+      }
+     ],
+     "change_commits": [
+      "3ceb2653df4b9ca0ff84d8d7515aab46fde88167"
+     ],
+     "diff_sha256": "e26e45cea96f303fb7f96f2b107c727d18e7e56b3ef7ccb199df9e68f3679ea7"
+    },
+    "Platform/06-console/spec/06.4-console.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/06-console/history-4.tsv",
+       "line": 250,
+       "req_id": "-",
+       "file": "spec/06.4-console.norms.md#implementation-decides"
+      },
+      {
+       "history": "decisions/journal/platform/06-console/history-4.tsv",
+       "line": 251,
+       "req_id": "-",
+       "file": "spec/06.4-console.norms.md#implementation-decides"
+      }
+     ],
+     "change_commits": [
+      "3ceb2653df4b9ca0ff84d8d7515aab46fde88167"
+     ],
+     "diff_sha256": "5d032d8881ec9740c62c3632602f24739aeb3540699a54e91b222bf98b3ee896"
+    },
+    "Platform/06-console/spec/06.5-console.norms.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/06-console/history-5.tsv",
+       "line": 640,
+       "req_id": "-",
+       "file": "spec/06.5-console.norms.md#implementation-decides"
+      },
+      {
+       "history": "decisions/journal/platform/06-console/history-5.tsv",
+       "line": 641,
+       "req_id": "-",
+       "file": "spec/06.5-console.norms.md#implementation-decides"
+      }
+     ],
+     "change_commits": [
+      "3ceb2653df4b9ca0ff84d8d7515aab46fde88167"
+     ],
+     "diff_sha256": "984f7cb442710f680f21caa86bf1cb6f63a82af3854a28b9bbaa1d983205a1a0"
+    },
+    "Platform/common/README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 520,
+       "req_id": "-",
+       "file": "README.md#intro"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce"
+     ],
+     "diff_sha256": "22e3b53f6e55b961055d2f7e3f30f2d34355b6534d5a8c2a91395a1eff93acb1"
+    },
+    "Platform/common/acceptance/PROFILE.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 521,
+       "req_id": "-",
+       "file": "acceptance/PROFILE.md#requirements-of-the-course-to-code"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 534,
+       "req_id": "-",
+       "file": "acceptance/PROFILE.md#substitutions"
+      }
+     ],
+     "change_commits": [
+      "caa226e99bc1799aee3e8241003c9c51f0cd2e7b",
+      "9925c20282feafe329936a56c0de9ea5c22b2bce"
+     ],
+     "diff_sha256": "14b7c516ddda566eb36aec1244feddad1d509f17b017989009dd0f5ec242ea5b"
+    },
+    "Platform/common/acceptance/README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 528,
+       "req_id": "-",
+       "file": "acceptance/README.md#dictionary-of-directives-and-doors"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 530,
+       "req_id": "-",
+       "file": "acceptance/README.md#dictionary-of-directives-and-doors"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 532,
+       "req_id": "-",
+       "file": "acceptance/README.md#full-form-by-door"
+      }
+     ],
+     "change_commits": [
+      "caa226e99bc1799aee3e8241003c9c51f0cd2e7b"
+     ],
+     "diff_sha256": "6bd299f480c5f43e9edc5d6c565d9e660a7525aa3f6127c3d88f754f84e0902f"
+    },
+    "Platform/common/acceptance/command-tables.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 536,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 538,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 540,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 542,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 544,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 546,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 548,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 550,
+       "req_id": "-",
+       "file": "acceptance/command-tables.md#deterministic-syscall-faults"
+      }
+     ],
+     "change_commits": [
+      "caa226e99bc1799aee3e8241003c9c51f0cd2e7b"
+     ],
+     "diff_sha256": "17ce6f9ba15d56bff8531ef42021d5ac89689784db8f15714d0558e44b309335"
+    },
+    "Platform/common/acceptance/forms/code-rules.tsv": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 522,
+       "req_id": "-",
+       "file": "acceptance/forms/code-rules.tsv#row:forbid_imports"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce"
+     ],
+     "diff_sha256": "28c36c418db6940fe556ae45976c2bf5f40f4b617802363431a6ce48b0134483"
+    },
+    "Platform/common/acceptance/runner-targets.tsv": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "94e363721c8650b0d5b7186613cae7e3bdbb0136851fc4a068ba992b6e34531d"
+    },
+    "Platform/common/contracts/accept.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "3e42daf2954a196cdfcbd4ec7ef2937abd1b40edb1926a700a78595e822977fe"
+    },
+    "Platform/common/contracts/domain-envelopes.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "b8bdfa72fdbc9eb44e78b9e04d362bd146aa5ca779a46f8f32313e3629fd709b"
+    },
+    "Platform/common/contracts/domain-founding.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "004daad49537947805790cb9aaf7107209ddfa2d64741399158aebf6e0b5a555"
+    },
+    "Platform/common/contracts/domain-token.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "dc8199fe02de1ad8ac40ba21150d8dc98196f3f3571338730b729d350d08ffda"
+    },
+    "Platform/common/contracts/door-token.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "1305d9ed16d07e22eb71996b1d47bbfb8c1236a91952e3207898a6638919778b"
+    },
+    "Platform/common/contracts/event-journal.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 587,
+       "req_id": "-",
+       "file": "contracts/event-journal.md#bucket-write-time"
+      }
+     ],
+     "change_commits": [
+      "e6bc56ba7301ea87a0fbe8b459b4bbe85fb7eee5"
+     ],
+     "diff_sha256": "ed66575a774e1f5059f404a26b0c1a94bb223c347ddd89cf448b63d25749fa11"
+    },
+    "Platform/common/contracts/jcs.md": {
+     "kind": "added",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "faaff4979ba390a5800d04c0fd8ed3f7c9b1895840a6896437272a3ccce6b932"
+    },
+    "Platform/common/contracts/json.md": {
+     "kind": "added",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 524,
+       "req_id": "-",
+       "file": "contracts/json.md#caller-rules"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce"
+     ],
+     "diff_sha256": "3ed1b4f643d59884e5964ec9a786638ad6fc5d2fd312cc62afc148a9ad24a459"
+    },
+    "Platform/common/contracts/keys.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "bac79cbaf1998e2c0b551f0bc0e6ee16b505e74a9a4bab9a56f7c7ce98108f81"
+    },
+    "Platform/common/contracts/object-client.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 588,
+       "req_id": "-",
+       "file": "contracts/object-client.md#reading-cluster-objects"
+      }
+     ],
+     "change_commits": [
+      "e6bc56ba7301ea87a0fbe8b459b4bbe85fb7eee5"
+     ],
+     "diff_sha256": "cd18c2c0bb1f7fb968664e67ea4da3729b579c907d77d52922fa088bd7072515"
+    },
+    "Platform/common/contracts/peer.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 585,
+       "req_id": "-",
+       "file": "contracts/peer.md#vectors"
+      }
+     ],
+     "change_commits": [
+      "9e5faea64995a5c02d059555bf5149d1f8e4f926"
+     ],
+     "diff_sha256": "ce5e85894aed7b1363435b4e6b5c78f5d8a6da061914707d693e199162c22ff3"
+    },
+    "Platform/common/contracts/record.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "2d604aeb543d8306aee6f4d3559b57ef61a6932b94499565761bd8c72136c51d"
+    },
+    "Platform/common/contracts/request-mark.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "54bb64949a4378d1895a1668237f5c02f14506ce0ebbfda1512049cc9205fe94"
+    },
+    "Platform/common/contracts/rights-evaluator.md": {
+     "kind": "added",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "a7cef2ef079c2f04a59337480eaf2caa19013aa32ddf8acf52e96a607b8a4eb3"
+    },
+    "Platform/common/contracts/row-check.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "94af799dc77d25be7a2a1cdae40b8c1a26b7438a2bd1f37f92a09d770ac3a3c6"
+    },
+    "Platform/common/contracts/vector-adapter.protocol.json": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "b82c65679ebcffe36c1eb9c683cca11a35065e767ce6773950b56e0ffa85096e"
+    },
+    "Platform/common/modules.md": {
+     "kind": "added",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 526,
+       "req_id": "-",
+       "file": "modules.md#module-inventory"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce"
+     ],
+     "diff_sha256": "781b27bafba984c7f45a36fbff34babfb3a66e7cf7cfe8ef77eeeab4550ef5aa"
+    },
+    "Platform/common/vectors/README.md": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "50fcd8ca1e15b3bd62f5802b28322028ee15eaaa7541f28c60e09c326479cb24"
+    },
+    "Platform/common/vectors/consumers.tsv": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "ceac74030d8f072a515640d499a34123b81f6b63d2262d501b81a0b4acc92d60"
+    },
+    "Platform/common/vectors/domain-token/README.md": {
+     "kind": "added",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 577,
+       "req_id": "-",
+       "file": "vectors/domain-token/README.md#intro"
+      }
+     ],
+     "change_commits": [
+      "82e7620a8e06c430370bb005e68267e47d7a2d91"
+     ],
+     "diff_sha256": "1d570e840258c3882edcce8c1318c88c876dd0f4a5146fba44fba7a47a797fc2"
+    },
+    "Platform/common/vectors/door-token/README.md": {
+     "kind": "added",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 575,
+       "req_id": "-",
+       "file": "vectors/door-token/README.md#intro"
+      }
+     ],
+     "change_commits": [
+      "82e7620a8e06c430370bb005e68267e47d7a2d91",
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "61c32cfb56b23eee2682bb6b91c40b6efb483c91bffd61c9b2f69bd301e5002a"
+    },
+    "Platform/common/vectors/jcs/README.md": {
+     "kind": "added",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 501,
+       "req_id": "-",
+       "file": "vectors/jcs/README.md#jcs-rfc-8785--vector"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 502,
+       "req_id": "-",
+       "file": "vectors/jcs/README.md#canonical_jsontsv"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 503,
+       "req_id": "-",
+       "file": "vectors/jcs/README.md#who-executes"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 504,
+       "req_id": "-",
+       "file": "vectors/jcs/README.md#who-executes"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 511,
+       "req_id": "-",
+       "file": "vectors/jcs/README.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 512,
+       "req_id": "-",
+       "file": "vectors/jcs/README.md#vector-wire"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 517,
+       "req_id": "-",
+       "file": "vectors/jcs/README.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 518,
+       "req_id": "-",
+       "file": "vectors/jcs/README.md#canonical_jsontsv"
+      }
+     ],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "9c643b9074e95df8502c6e717afb17c7b34fcc4239996abb9158d6376028753f"
+    },
+    "Platform/common/vectors/peer/README.md": {
+     "kind": "added",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 583,
+       "req_id": "-",
+       "file": "vectors/peer/README.md#intro"
+      }
+     ],
+     "change_commits": [
+      "9e5faea64995a5c02d059555bf5149d1f8e4f926"
+     ],
+     "diff_sha256": "a64d563935841b551c40aeceeff0140320bcc7d8b1c88100d34a9d9af313c474"
+    },
+    "Platform/common/vectors/rights-evaluator/README.md": {
+     "kind": "added",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 505,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#rights-evaluator--vector"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 506,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#rights-evaluator--vector"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 507,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#rights-evaluator--vector"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 508,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#rights-evaluator--vector"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 509,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#who-executes"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 510,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#who-executes"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 513,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 514,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#intro"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 515,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#vector-wire"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 516,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#vector-wire"
+      },
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 519,
+       "req_id": "-",
+       "file": "vectors/rights-evaluator/README.md#intro"
+      }
+     ],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "835905df3f4e841aa89c363310b48262e819124bc7fecbf6e30e173b210c2eb5"
+    },
+    "Platform/common/vectors/row-check/README.md": {
+     "kind": "added",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 573,
+       "req_id": "-",
+       "file": "vectors/row-check/README.md#intro"
+      }
+     ],
+     "change_commits": [
+      "82e7620a8e06c430370bb005e68267e47d7a2d91"
+     ],
+     "diff_sha256": "3ac64abcc8a539e30b594c8b0e993427dead7655a65ec4258ab52aabd7e5f707"
+    },
+    "Platform/common/vectors/sealing/README.md": {
+     "kind": "added",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 571,
+       "req_id": "-",
+       "file": "vectors/sealing/README.md#intro"
+      }
+     ],
+     "change_commits": [
+      "82e7620a8e06c430370bb005e68267e47d7a2d91"
+     ],
+     "diff_sha256": "95021ecf490aa5684f6a592c4949a1bab3ecdfbd34428e3b21ae016662fb6d22"
+    },
+    "Platform/common/vectors/wire.tsv": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "88631f3131a48ad32241d43ed06815e03096b5cc"
+     ],
+     "diff_sha256": "8214b996fd1672c0b295db2a2c122e4436d6be8b489becc6aa9a62f646773288"
+    },
+    "Platform/common/versions/README.md": {
+     "kind": "changed",
+     "history": [
+      {
+       "history": "decisions/journal/platform/common/history.tsv",
+       "line": 527,
+       "req_id": "-",
+       "file": "versions/README.md#shared-code-module-pins"
+      }
+     ],
+     "change_commits": [
+      "9925c20282feafe329936a56c0de9ea5c22b2bce"
+     ],
+     "diff_sha256": "169164fa8ac32a6e471de012a74bb9c454a55d8279639e33e9abaad85b8ce5b9"
+    },
+    "Platform/common/versions/go.mod": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "1b60bf7ad6141e5d5cc49d185a16ee30fcf8c66c",
+      "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30"
+     ],
+     "diff_sha256": "5bd154a887135d036a79958aa5ab67e59e9b9a816c4bbfab4e0b490252bc9ad1"
+    },
+    "Platform/common/versions/go.sum": {
+     "kind": "changed",
+     "history": [],
+     "change_commits": [
+      "1b60bf7ad6141e5d5cc49d185a16ee30fcf8c66c",
+      "69e14d0cdd133f2736e1e8261a690ccb3ab2ed30"
+     ],
+     "diff_sha256": "7802f41f741f278cbaabc0972bcefbd0a67047aeb8b22e1ce9993edaeaac9ce0"
+    }
+   },
+   "files_without_own_added_English_history": [
+    "Platform/01-store/forms/targets.tsv",
+    "Platform/01-store/spec/01-store.README.md",
+    "Platform/01-store/vectors/jcs/README.md",
+    "Platform/01-store/vectors/rights-evaluator/README.md",
+    "Platform/common/acceptance/runner-targets.tsv",
+    "Platform/common/contracts/accept.md",
+    "Platform/common/contracts/domain-envelopes.md",
+    "Platform/common/contracts/domain-founding.md",
+    "Platform/common/contracts/domain-token.md",
+    "Platform/common/contracts/door-token.md",
+    "Platform/common/contracts/jcs.md",
+    "Platform/common/contracts/keys.md",
+    "Platform/common/contracts/record.md",
+    "Platform/common/contracts/request-mark.md",
+    "Platform/common/contracts/rights-evaluator.md",
+    "Platform/common/contracts/row-check.md",
+    "Platform/common/contracts/vector-adapter.protocol.json",
+    "Platform/common/vectors/README.md",
+    "Platform/common/vectors/consumers.tsv",
+    "Platform/common/vectors/wire.tsv",
+    "Platform/common/versions/go.mod",
+    "Platform/common/versions/go.sum"
+   ],
+   "listed_exactly_changed_paragraphs": true,
+   "OK": true
+  }
+ },
+ "note": "Exact paragraph/checklist/file coverage and matching added history evidence for every changed paragraph/checklist item. The journal quotes exact source prose bodies, excluding adjacent tombstones and separators. Unanchored changes are included in the M-only patch. The transport marker is excluded.",
+ "OK": true
+}

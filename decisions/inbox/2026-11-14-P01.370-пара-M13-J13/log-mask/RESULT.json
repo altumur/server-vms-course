@@ -1,0 +1,169 @@
+{
+ "task": "P01.370",
+ "C": "cde92cf79905c18a064732cde7917f52068c2cca",
+ "course_pin_commit": "1b60bf7ad6141e5d5cc49d185a16ee30fcf8c66c",
+ "module_commit": "e19621128ad83f7e50267d58cfe1a2f029e70a28",
+ "module": "servervms.local/common/log-mask",
+ "version": "v0.0.0-20261113215911-e19621128ad8",
+ "zip_sha256": "29b52c538fca20a31edd8ff9b55a05b2f4dbcea3871125d6e97bfaf43ca6cf52",
+ "all": {
+  "rows": 50,
+  "green": 40,
+  "red": 10
+ },
+ "new_B03": {
+  "rows": 11,
+  "green": 1,
+  "red": 10,
+  "results": [
+   {
+    "case": "utf8-regex-2-literal",
+    "line": 58,
+    "raw": "http://h/password/é",
+    "expected": "http://h/password/***",
+    "outer_exit": 0,
+    "expected_utf8_hex": "687474703a2f2f682f70617373776f72642f2a2a2a",
+    "ok": false,
+    "native_exit": 0,
+    "actual": "http://h/password/é",
+    "native_stdout_hex": "22687474703a2f2f682f70617373776f72642fc3a922",
+    "actual_utf8_hex": "687474703a2f2f682f70617373776f72642fc3a9"
+   },
+   {
+    "case": "utf8-regex-2-percent",
+    "line": 59,
+    "raw": "http://h/password/%C3%A9",
+    "expected": "http://h/password/***",
+    "outer_exit": 0,
+    "expected_utf8_hex": "687474703a2f2f682f70617373776f72642f2a2a2a",
+    "ok": false,
+    "native_exit": 0,
+    "actual": "http://h/password/%C3%A9",
+    "native_stdout_hex": "22687474703a2f2f682f70617373776f72642f25433325413922",
+    "actual_utf8_hex": "687474703a2f2f682f70617373776f72642f254333254139"
+   },
+   {
+    "case": "utf8-regex-2-fixed-point",
+    "line": 60,
+    "raw": "http://h/password/%25C3%25A9",
+    "expected": "http://h/password/***",
+    "outer_exit": 0,
+    "expected_utf8_hex": "687474703a2f2f682f70617373776f72642f2a2a2a",
+    "ok": false,
+    "native_exit": 0,
+    "actual": "http://h/password/%25C3%25A9",
+    "native_stdout_hex": "22687474703a2f2f682f70617373776f72642f2532354333253235413922",
+    "actual_utf8_hex": "687474703a2f2f682f70617373776f72642f25323543332532354139"
+   },
+   {
+    "case": "utf8-regex-3-literal",
+    "line": 61,
+    "raw": "http://h/password/€",
+    "expected": "http://h/password/***",
+    "outer_exit": 0,
+    "expected_utf8_hex": "687474703a2f2f682f70617373776f72642f2a2a2a",
+    "ok": false,
+    "native_exit": 0,
+    "actual": "http://h/password/€",
+    "native_stdout_hex": "22687474703a2f2f682f70617373776f72642fe282ac22",
+    "actual_utf8_hex": "687474703a2f2f682f70617373776f72642fe282ac"
+   },
+   {
+    "case": "utf8-regex-3-percent",
+    "line": 62,
+    "raw": "http://h/password/%E2%82%AC",
+    "expected": "http://h/password/***",
+    "outer_exit": 0,
+    "expected_utf8_hex": "687474703a2f2f682f70617373776f72642f2a2a2a",
+    "ok": false,
+    "native_exit": 0,
+    "actual": "http://h/password/%E2%82%AC",
+    "native_stdout_hex": "22687474703a2f2f682f70617373776f72642f25453225383225414322",
+    "actual_utf8_hex": "687474703a2f2f682f70617373776f72642f254532253832254143"
+   },
+   {
+    "case": "utf8-regex-3-fixed-point",
+    "line": 63,
+    "raw": "http://h/password/%25E2%2582%25AC",
+    "expected": "http://h/password/***",
+    "outer_exit": 0,
+    "expected_utf8_hex": "687474703a2f2f682f70617373776f72642f2a2a2a",
+    "ok": false,
+    "native_exit": 0,
+    "actual": "http://h/password/%25E2%2582%25AC",
+    "native_stdout_hex": "22687474703a2f2f682f70617373776f72642f25323545322532353832253235414322",
+    "actual_utf8_hex": "687474703a2f2f682f70617373776f72642f253235453225323538322532354143"
+   },
+   {
+    "case": "utf8-regex-4-literal",
+    "line": 64,
+    "raw": "http://h/password/😀",
+    "expected": "http://h/password/***",
+    "outer_exit": 0,
+    "expected_utf8_hex": "687474703a2f2f682f70617373776f72642f2a2a2a",
+    "ok": false,
+    "native_exit": 0,
+    "actual": "http://h/password/😀",
+    "native_stdout_hex": "22687474703a2f2f682f70617373776f72642ff09f988022",
+    "actual_utf8_hex": "687474703a2f2f682f70617373776f72642ff09f9880"
+   },
+   {
+    "case": "utf8-regex-4-percent",
+    "line": 65,
+    "raw": "http://h/password/%F0%9F%98%80",
+    "expected": "http://h/password/***",
+    "outer_exit": 0,
+    "expected_utf8_hex": "687474703a2f2f682f70617373776f72642f2a2a2a",
+    "ok": false,
+    "native_exit": 0,
+    "actual": "http://h/password/%F0%9F%98%80",
+    "native_stdout_hex": "22687474703a2f2f682f70617373776f72642f25463025394625393825383022",
+    "actual_utf8_hex": "687474703a2f2f682f70617373776f72642f254630253946253938253830"
+   },
+   {
+    "case": "utf8-regex-4-fixed-point",
+    "line": 66,
+    "raw": "http://h/password/%25F0%259F%2598%2580",
+    "expected": "http://h/password/***",
+    "outer_exit": 0,
+    "expected_utf8_hex": "687474703a2f2f682f70617373776f72642f2a2a2a",
+    "ok": false,
+    "native_exit": 0,
+    "actual": "http://h/password/%25F0%259F%2598%2580",
+    "native_stdout_hex": "22687474703a2f2f682f70617373776f72642f253235463025323539462532353938253235383022",
+    "actual_utf8_hex": "687474703a2f2f682f70617373776f72642f2532354630253235394625323539382532353830"
+   },
+   {
+    "case": "utf8-regex-mixed",
+    "line": 67,
+    "raw": "trace http://h/password/aé/live?channel=1 done",
+    "expected": "trace http://h/password/***/live?channel=1 done",
+    "outer_exit": 0,
+    "expected_utf8_hex": "747261636520687474703a2f2f682f70617373776f72642f2a2a2a2f6c6976653f6368616e6e656c3d3120646f6e65",
+    "ok": false,
+    "native_exit": 0,
+    "actual": "trace http://h/password/aé/live?channel=1 done",
+    "native_stdout_hex": "22747261636520687474703a2f2f682f70617373776f72642f61c3a92f6c6976653f6368616e6e656c3d3120646f6e6522",
+    "actual_utf8_hex": "747261636520687474703a2f2f682f70617373776f72642f61c3a92f6c6976653f6368616e6e656c3d3120646f6e65"
+   },
+   {
+    "case": "utf8-regex-nonsecret",
+    "line": 68,
+    "raw": "http://h/live/é/€/😀?channel=1",
+    "expected": "http://h/live/é/€/😀?channel=1",
+    "outer_exit": 0,
+    "expected_utf8_hex": "687474703a2f2f682f6c6976652fc3a92fe282ac2ff09f98803f6368616e6e656c3d31",
+    "ok": true,
+    "native_exit": 0,
+    "actual": "http://h/live/é/€/😀?channel=1",
+    "native_stdout_hex": "22687474703a2f2f682f6c6976652fc3a92fe282ac2ff09f98803f6368616e6e656c3d3122",
+    "actual_utf8_hex": "687474703a2f2f682f6c6976652fc3a92fe282ac2ff09f98803f6368616e6e656c3d31"
+   }
+  ]
+ },
+ "old": {
+  "rows": 39,
+  "red": []
+ },
+ "finding_scope": "shared module log-mask, not only candidate 8.3"
+}
