@@ -8,7 +8,7 @@
   },
   "ts": {
    "$ref": "#/$defs/common.time",
-   "description": "the moment of the write of the object; rows did not change — the previous one"
+   "description": "the moment of the object write; unchanged cluster, refused and rows retain the former ts (P/04-R174)"
   },
   "refused": {
    "description": "a stub instead of rows: the table did not fit (P/04 N1.3b ceiling, P/09.1 N1.2 tables_budget)",

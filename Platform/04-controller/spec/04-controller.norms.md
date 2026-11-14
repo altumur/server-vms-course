@@ -19,33 +19,33 @@ which the operator talks to the controller are the doors of the console ([P/06.6
 | `intent_commit` | P/04-R027, P/04-R036, P/04-R037, P/04-R038, P/04-R243, P/04-R244, P/04-R245, P/04-R246, P/04-R247, P/04-R248, P/04-R253, P/04-R254, P/04-R259, P/04-R301, P/04-R490, P/04-R517, P/04-R520, P/04-R521 | `Platform/common/contracts/turn.md`, `data/workers.schema.json` |
 | `group_atomicity` | P/04-R023, P/04-R029, P/04-R156, P/04-R235, P/04-R237, P/04-R239, P/04-R245, P/04-R246, P/04-R247, P/04-R261 | `Platform/common/contracts/group-of.md`, `data/placement-intent.schema.json` |
 | `placement_key_size` | P/04-R028, P/04-R031, P/04-R250 | `data/placement-intent.schema.json`, `forms/refusals.tsv` |
-| `manifest_revision` | P/04-R058, P/04-R076, P/04-R094, P/04-R116, P/04-R212, P/04-R214, P/04-R262, P/04-R405 | `data/placement.schema.json`, `data/placement-turn.schema.json`, `data/placement-intent.schema.json` |
-| `pool_labels` | P/04-R005, P/04-R034, P/04-R081, P/04-R083, P/04-R150, P/04-R152, P/04-R160, P/04-R287, P/04-R288, P/04-R337 | `Platform/common/contracts/labels.md`, `Platform/common/contracts/pool.md` |
+| `manifest_revision` | P/04-R058, P/04-R076, P/04-R094, P/04-R116, P/04-R212, P/04-R214, P/04-R262, P/04-R405, P/04-R560 | `data/placement.schema.json`, `data/placement-turn.schema.json`, `data/placement-intent.schema.json` |
+| `pool_labels` | P/04-R005, P/04-R034, P/04-R081, P/04-R083, P/04-R150, P/04-R152, P/04-R160, P/04-R287, P/04-R288, P/04-R337, P/04-R566 | `Platform/common/contracts/labels.md`, `Platform/common/contracts/pool.md` |
 | `home_preference` | P/04-R158, P/04-R268, P/04-R290 | `Platform/common/contracts/pool.md` |
 | `near_preference` | P/04-R034, P/04-R133, P/04-R157, P/04-R262 | `vectors/near-of/README.md`, `Platform/common/contracts/pool.md` |
 | `affinity_places` | P/04-R159, P/04-R288, P/04-R334, P/04-R527, P/04-R528, P/04-R529, P/04-R531 | `Platform/common/contracts/pool.md` |
-| `choice_ranks` | P/04-R033, P/04-R035, P/04-R151, P/04-R286, P/04-R287, P/04-R288, P/04-R290, P/04-R291, P/04-R292 | `Platform/common/contracts/pool.md`, `data/placement.schema.json` |
+| `choice_ranks` | P/04-R033, P/04-R035, P/04-R151, P/04-R286, P/04-R287, P/04-R288, P/04-R290, P/04-R291, P/04-R292, P/04-R566 | `Platform/common/contracts/pool.md`, `data/placement.schema.json` |
 | `slot_observation` | P/04-R014, P/04-R015, P/04-R039, P/04-R046, P/04-R196, P/04-R197, P/04-R208, P/04-R313 | `Platform/common/contracts/observation.md`, `forms/slot-fate.tsv` |
 | `release_permission` | P/04-R040, P/04-R041, P/04-R042, P/04-R043, P/04-R044, P/04-R045, P/04-R046, P/04-R117, P/04-R119, P/04-R198, P/04-R310, P/04-R311, P/04-R318 | `forms/slot-fate.tsv`, `forms/slot-release.tsv`, `data/controller-pass.schema.json` |
 | `leaving` | P/04-R035, P/04-R047, P/04-R048, P/04-R267, P/04-R287, P/04-R322 | `forms/README.md`, `Platform/common/contracts/pool.md` |
-| `placeable_set` | P/04-R025, P/04-R162, P/04-R163, P/04-R165, P/04-R325, P/04-R327, P/04-R479, P/04-R481 | `vectors/order/README.md`, `vectors/shrink-allowed/README.md` |
+| `placeable_set` | P/04-R025, P/04-R162, P/04-R163, P/04-R165, P/04-R325, P/04-R327, P/04-R479, P/04-R481, P/04-R563, P/04-R566 | `vectors/order/README.md`, `vectors/shrink-allowed/README.md` |
 | `unit_cleanup` | P/04-R025, P/04-R120, P/04-R124, P/04-R134, P/04-R269, P/04-R276 | `Platform/common/contracts/row-check.md`, `data/controller-pass.schema.json` |
 | `order_absolute` | P/04-R050, P/04-R052, P/04-R107, P/04-R339, P/04-R355, P/04-R356, P/04-R494, P/04-R541 | `vectors/order/README.md`, `data/want.schema.json` |
 | `growth_room` | P/04-R085, P/04-R330, P/04-R332, P/04-R333, P/04-R337, P/04-R357 | `vectors/order/README.md`, `Platform/common/contracts/presence-lock.md` |
 | `shortage_estimate` | P/04-R053, P/04-R130, P/04-R139, P/04-R149, P/04-R325, P/04-R327, P/04-R334, P/04-R527, P/04-R528, P/04-R529, P/04-R531, P/04-R532 | `vectors/order/README.md`, `data/controller-pass.schema.json` |
-| `want_deadline` | P/04-R107, P/04-R131, P/04-R191, P/04-R329, P/04-R330, P/04-R340, P/04-R356, P/04-R482 | `forms/runtime-constants.tsv`, `data/want.schema.json` |
-| `shrink` | P/04-R051, P/04-R111, P/04-R194, P/04-R327, P/04-R341, P/04-R343, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499 | `forms/README.md`, `vectors/shrink-victim/README.md`, `vectors/shrink-allowed/README.md` |
-| `decommission_plan` | P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R091, P/04-R094, P/04-R359, P/04-R361, P/04-R363, P/04-R369, P/04-R371, P/04-R495, P/04-R504 | `data/decommission-pending.schema.json`, `data/decommissioned.schema.json` |
+| `want_deadline` | P/04-R107, P/04-R131, P/04-R191, P/04-R329, P/04-R330, P/04-R340, P/04-R356, P/04-R482, P/04-R562 | `forms/runtime-constants.tsv`, `data/want.schema.json` |
+| `shrink` | P/04-R051, P/04-R111, P/04-R194, P/04-R327, P/04-R341, P/04-R343, P/04-R348, P/04-R349, P/04-R350, P/04-R351, P/04-R352, P/04-R353, P/04-R482, P/04-R499, P/04-R563 | `forms/README.md`, `vectors/shrink-victim/README.md`, `vectors/shrink-allowed/README.md` |
+| `decommission_plan` | P/04-R054, P/04-R055, P/04-R056, P/04-R089, P/04-R091, P/04-R094, P/04-R359, P/04-R361, P/04-R363, P/04-R369, P/04-R371, P/04-R495, P/04-R504, P/04-R558, P/04-R559 | `data/decommission-pending.schema.json`, `data/decommissioned.schema.json` |
 | `decommission_release` | P/04-R094, P/04-R101, P/04-R376, P/04-R378, P/04-R381 | `data/decommission-pending.schema.json`, `Platform/common/contracts/turn.md` |
 | `decommission_cleanup` | P/04-R094, P/04-R103, P/04-R384, P/04-R385, P/04-R386, P/04-R387, P/04-R388, P/04-R390, P/04-R392, P/04-R393, P/04-R395, P/04-R507, P/04-R510, P/04-R511, P/04-R513 | `data/decommission-pending.schema.json`, `Platform/common/contracts/turn.md` |
-| `decommission_finish` | P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R094, P/04-R105, P/04-R353, P/04-R395, P/04-R399, P/04-R401, P/04-R403, P/04-R404, P/04-R495 | `data/decommissioned.schema.json`, `data/decommission-pending.schema.json` |
-| `snapshot_fields` | P/04-R011, P/04-R064, P/04-R137, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R417, P/04-R498, P/04-R548, P/04-R549 | `data/snapshot.schema.json`, `data/snapshot-unplaced.schema.json` |
-| `snapshot_ceiling` | P/04-R068, P/04-R171, P/04-R182, P/04-R419, P/04-R421 | `forms/refusals.tsv`, `data/snapshot.schema.json` |
-| `table_snapshot` | P/04-R012, P/04-R013, P/04-R062, P/04-R174, P/04-R175, P/04-R177, P/04-R178, P/04-R181, P/04-R182, P/04-R183, P/04-R411, P/04-R412, P/04-R555, P/04-R556 | `data/snapshot-tables.schema.json`, `forms/runtime-constants.tsv` |
-| `report_cycle` | P/04-R007, P/04-R008, P/04-R113, P/04-R124, P/04-R134, P/04-R137, P/04-R139, P/04-R142, P/04-R279 | `data/controller-pass.schema.json`, `forms/README.md` |
+| `decommission_finish` | P/04-R054, P/04-R055, P/04-R056, P/04-R091, P/04-R094, P/04-R105, P/04-R353, P/04-R395, P/04-R399, P/04-R401, P/04-R403, P/04-R404, P/04-R495, P/04-R558, P/04-R559 | `data/decommissioned.schema.json`, `data/decommission-pending.schema.json` |
+| `snapshot_fields` | P/04-R011, P/04-R064, P/04-R137, P/04-R167, P/04-R168, P/04-R169, P/04-R170, P/04-R413, P/04-R415, P/04-R417, P/04-R498, P/04-R548, P/04-R549, P/04-R561, P/04-R564 | `data/snapshot.schema.json`, `data/snapshot-unplaced.schema.json` |
+| `snapshot_ceiling` | P/04-R068, P/04-R171, P/04-R182, P/04-R419, P/04-R421, P/04-R560, P/04-R564 | `forms/refusals.tsv`, `data/snapshot.schema.json` |
+| `table_snapshot` | P/04-R012, P/04-R013, P/04-R062, P/04-R174, P/04-R175, P/04-R177, P/04-R178, P/04-R181, P/04-R182, P/04-R183, P/04-R411, P/04-R412, P/04-R555, P/04-R556, P/04-R560, P/04-R564 | `data/snapshot-tables.schema.json`, `forms/runtime-constants.tsv` |
+| `report_cycle` | P/04-R007, P/04-R008, P/04-R113, P/04-R124, P/04-R134, P/04-R137, P/04-R139, P/04-R142, P/04-R279, P/04-R560, P/04-R562, P/04-R565 | `data/controller-pass.schema.json`, `forms/README.md` |
 | `startup_schema` | P/04-R059, P/04-R060 | `forms/daemon-flags.tsv`, `lifecycle.md`, `Platform/common/contracts/schema.md` |
 | `power_pull` | P/04-R016, P/04-R017, P/04-R065, P/04-R066, P/04-R202, P/04-R203, P/04-R204, P/04-R205, P/04-R206, P/04-R207, P/04-R208, P/04-R430, P/04-R431 | `Platform/common/contracts/observation.md`, `lifecycle.md` |
-| `refusals` | P/04-R067, P/04-R068 | `forms/refusals.tsv` |
+| `refusals` | P/04-R067, P/04-R068, P/04-R564 | `forms/refusals.tsv` |
 
 In N5 and the checklists, `sc. NN` or `scenario NN` denotes a numbered scenario, and an `s…` identifier denotes a CALL seam; these are acceptance evidence names of this lesson unless another owner is named. A paragraph starting with «**Scope: production.**» applies only to production qualification; every unmarked requirement remains mandatory for every implementation. The checklist marks `[test]`, `[reading]` and `[stand]` have the meanings of P/01.1-R151.
 
@@ -96,7 +96,7 @@ The rows `<sub>/policy`, `platform/servers/<host>`, `platform/drain`, `platform/
 
 <!-- req: P/04-R006 -->
 
-The controller and imported rows use the forms and field rules below.
+The controller and imported rows use the forms and field rules below. For unreadable-family outcomes, the smallest numeric priority applies; all equal-priority rows act in file order by the outcome-selection rule of common/LAYERS.md §7.
 
 <!-- req: P/04-R076 -->
 
@@ -176,6 +176,10 @@ The pass report uses all fields and field meanings specified below.
 
 **`pass — manifest_rev`** is the manifest revision of this controller. **`pass — manifest_behind`** counts rows whose writes this pass postpones because the manifest lags; count each row once per pass.
 
+<!-- req: P/04-R560 -->
+
+For the JSON objects of this lesson, the implementation chooses whitespace and object-key order; these choices are not judged. The pass writer also chooses the schema-admissible string or integer notation of manifest_rev; the exact revision value is judged without loss of precision. The complete actual serialization still determines every byte limit; this freedom does not impose JCS or change any normative array order.
+
 <!-- req: P/04-R117 -->
 
 **`pass — names_given`**: {\<slot name\>: \<version of the slot row at which the name is given\>}
@@ -211,6 +215,10 @@ The pass report uses all fields and field meanings specified below.
 <!-- req: P/04-R131 -->
 
 **`pass — wants`**: {`<server>`: {want, live, pending, retiring?, why, state}} — only with grows: true; live — the live role processes of the server, pending — in flight(s) by heartbeats (N3); state: ok | raising | raise_failed | no_base. **`pass — raise_failed`**: {`<server>`: {since, times}} — the server «failed to raise»: since — the moment the order was withdrawn, times — in a row
+
+<!-- req: P/04-R562 -->
+
+Select `wants.<s>.state` in this order: no_base when the base process is not live; otherwise raise_failed while the server is excluded for RAISE_QUIET after a confirmed order withdrawal; otherwise raising when heartbeat-derived pending is positive; otherwise ok. The diagnostic raise_failed.{since,times} and its reset remain P/04-R340. A missing base is never included in pending.
 
 <!-- req: P/04-R133 -->
 
@@ -253,6 +261,10 @@ The form of the keys is P/02.1 (N1.2). Here — what each of them means for the 
 <!-- req: P/04-R150 -->
 
 **`constraint`.** `none` \| `labels-subset`: the labels of the unit ⊆ the labels of the worker. The labels of the unit — its field `labels` of type `list` (no field — an empty set, the constraint holds); a label — by [the label alphabet](../../common/contracts/labels.md); the labels of the worker — the row `platform/servers/<host>` or the node labels. Default: `none`.
+
+<!-- req: P/04-R566 -->
+
+Label reachability and out of reach apply only with constraint: labels-subset (P/04-R150). With constraint: none, a label mismatch alone does not move or unplace a unit and does not make it waiting or create shortage.
 
 <!-- req: P/04-R151 -->
 
@@ -346,6 +358,10 @@ Declared unit fields cannot include platform_fields of P/06.1 N1.2, including de
 
 **`<sub>/snapshot/<worker> | <sub>/snapshot/unplaced — publish`**: after the control part releases turn and before this cycle's one final report (N3 «pass()»); the shards of gone workers — empty; without units — an empty unplaced an empty shard has one form for all: {cluster, worker: null, ts, `<rows>`: []} — the field `<rows>` is present, the list is empty (as the witness)
 
+<!-- req: P/04-R561 -->
+
+The implementation chooses the order of unit entries in a worker or unplaced shard; that order is not judged. The required membership, fields and types are unchanged. This freedom does not change the table-snapshot key order of P/04-R175.
+
 <!-- req: P/04-R170 -->
 
 **`<sub>/snapshot/<worker> | <sub>/snapshot/unplaced — garbled`**: a unit row whose snapshot field does not read by its type by values_by_type P/06.1 N1.2 is not included in the shard; the shard is published with the other units, a log line once per series and the counter `snapshot_rows_garbled` of the pass report N1.2 (P/01.1 N0 «Stability of output»)
@@ -366,7 +382,7 @@ Table snapshot objects use the envelope, content and publication rules below. **
 
 <!-- req: P/04-R174 -->
 
-**`<sub>/snapshot-tables/<table> — ts`**: the moment of the object write; rows did not change — the object is not written, ts is the former one: liveness is not ts but members[].state of the view
+**`<sub>/snapshot-tables/<table> — ts`**: the moment of the object write. Compare the candidate object with the last confirmed published object without ts: cluster, refused and rows must match, including presence or absence of refused. If they match, do not write and keep the former ts; a new ts alone never causes a write. A CLUSTER change or a transition between a too_large stub and an ordinary object requires publication even when rows match. Liveness is not ts but members[].state of the view.
 
 <!-- req: P/04-R175 -->
 
@@ -897,7 +913,7 @@ Schema — [`snapshot-tables.schema.json`](../data/snapshot-tables.schema.json),
 | Key | Type and bounds | Requirement | Lesson | Meaning |
 |---|---|---|---|---|
 | `cluster` | string | required |  | the installation name — CLUSTER of the environment (P/02.4 N1.2), not set — local |
-| `ts` | time (P/01.1 N0 «Time in a row») | required |  | the moment of the write of the object; rows did not change — the previous one |
+| `ts` | time (P/01.1 N0 «Time in a row») | required |  | the moment of the object write; unchanged cluster, refused and rows retain the former ts (P/04-R174) |
 | `refused` | string; one of: `too_large`, `whole_too_large` | optional |  | a stub instead of rows: the table did not fit (P/04 N1.3b ceiling, P/09.1 N1.2 tables_budget) |
 | `rows` | list, element — map `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?}` | required |  | the rows of the table by key in UTF-8 bytes (the order is a rule of the lesson, not the form) |
 | `rows[]` | map `{key, revision, fields, secrets?, worker?, server?, phase?, status?, labels?, about?}` | optional |  |  |
@@ -1027,6 +1043,10 @@ The transfer guarantee is about rows and assignments; old process actions stop t
 
 Each pass follows the ordered steps below every PASS_EVERY, with the independent-step error handling specified there. Each step of the pass runs in its own attempt: an error of a step increments failures by 1, and the other steps go on.
 
+<!-- req: P/04-R565 -->
+
+If a pass lasts longer than PASS_EVERY, the implementation chooses whether to skip occupied ticks or schedule the next pass after completion; that scheduling choice is not judged. Without an overrun, the PASS_EVERY period remains in force. Changing passes and cycle publications must not overlap, and P/04-R142 still isolates every cycle and its counters.
+
 <!-- req: P/04-R491 -->
 
 0. Update the memory of observed heartbeats, slots and resources on this controller’s own clock; first sight of a version means it has just changed. Read cluster objects (worker/resource heartbeats and reports) through the resource of this server. Without its resource, `cluster://` gives unknown, not absent ([object client](../../common/contracts/object-client.md), door).
@@ -1057,7 +1077,7 @@ After turn admission and intent completion, take a fresh view of units, placemen
 
 <!-- req: P/04-R266 -->
 
-5. reachability: the units whose server no longer reaches their labels — a move within REACH_BUDGET; a group — whole, the first group goes even beyond the budget; nowhere — remove with a reason
+5. reachability: only with constraint: labels-subset by P/04-R150 and P/04-R566, the units whose server no longer reaches their labels — a move within REACH_BUDGET; a group — whole, the first group goes even beyond the budget; nowhere — remove with a reason
 
 <!-- req: P/04-R267 -->
 
@@ -1069,7 +1089,7 @@ After turn admission and intent completion, take a fresh view of units, placemen
 
 <!-- req: P/04-R269 -->
 
-8. unplaced for longer than delete_after: under the own turn re-read the unit and its effective placement by N1.5; there is an assignment, an active intent (with any target) or the read is not confirmed → do not delete. Still unplaced and the deadline is confirmed → delete the row with cas of its fresh version AND guard of the own version of placement_turn (the admission of step 5 above); conflict/412/no answer → the barrier and a new plan by the turn rule, the journal unit.unplaced_deleted only on success.
+8. unplaced for longer than delete_after: under the own turn re-read the unit and its effective placement by N1.5; there is an assignment, an active intent (with any target) or the read is not confirmed → do not delete. Still unplaced and the deadline is confirmed → delete the row with cas of its fresh version AND guard of the own version of placement_turn (turn admission P/04-R523 and step 5 of the turn contract); conflict/412/no answer → the barrier and a new plan by the turn rule, the journal unit.unplaced_deleted only on success.
 
 <!-- req: P/04-R271 -->
 
@@ -1143,7 +1163,7 @@ found → accept and complete a decision for the unit or the whole group by N3 a
 
 <!-- req: P/04-R292 -->
 
-none → the row is not written (or reason, why), the unit is in unplaced; heavier than any — into unplaceable with words
+none → choose neither creates nor rewrites a placement row; the non-empty reason for a unit without a place is recorded in unplaceable by P/04-R129. This does not cancel the separately required removal of a placement by reachability, leaving, ends or retire_when.
 
 <!-- req: P/04-R034 -->
 
@@ -1251,7 +1271,11 @@ placeable = readable live unit rows, excluding deleted/tombstoned rows and every
 
 <!-- req: P/04-R327 -->
 
-waiting = placeable ∩ (units without a placement ∪ units of the leaving ∪ out of reach); a group is one piece. Only these waiting units feed shortage, growth, the no-shortage timer and shrinking; retained expired rows and garbled rows neither cause an order nor delay shrinking.
+waiting = placeable ∩ (units without a placement ∪ units of the leaving ∪ out of reach only with constraint: labels-subset by P/04-R150 and P/04-R566); a group is one piece. Only these waiting units feed shortage, growth, the no-shortage timer and shrinking; retained expired rows and garbled rows neither cause an order nor delay shrinking.
+
+<!-- req: P/04-R563 -->
+
+The no-shortage timer is one timer for the entire role, not one per label set. Any non-empty waiting set resets it; the first pass with no waiting units across all label sets starts it. Absence of waiting units for one label set does not permit shrinking while another label set still has waiting units.
 
 <!-- req: P/04-R329 -->
 
@@ -1397,6 +1421,14 @@ With no pending or final row, if the server is heard by the ordinary observation
 
 Fix the original readable slots with server = s as ordered {name,index}, the owned from prefixes, asked_at, manifest_rev, units/holds metadata. Preflight every full key, the largest reachable serialized progress row and final mark, row weights, and real batch-body ceiling. Reserve the P/01 wire index width for cleanup_index; never parse an opaque version. An unrepresentable plan is a step error before any slot/order change, not a partial final mark.
 
+<!-- req: P/04-R558 -->
+
+The implementation chooses the initial order of planned slots, owned from prefixes and final-mark slots/units/holds lists; those ordering choices are not judged. Their required membership is unchanged. After plan acceptance, continuation must preserve the recorded list order and original indices; the release/cleanup procedure alone advances progress. Final-mark slots preserves the recorded confirmed released sequence, not all original candidates. There is no requirement to choose the fullest possible release chunk.
+
+<!-- req: P/04-R559 -->
+
+Before accepting pending, fix units as the unique union of ids in the assignments of the original slots and ids whose effective decisions name one of those slots. Fix holds as the place names of readable `<sub>/holds/<place>` rows whose `by` equals an original slot name; do not substitute heartbeat place values. Freeze both lists before acceptance. An incomplete or unreadable required source is not an empty list. These lists are final-mark metadata, not authority to delete units or contributions; the cleanup guards remain required.
+
 <!-- removed: P/04-R370 by ADR-0133 -->
 
 <!-- req: P/04-R371 -->
@@ -1525,7 +1557,7 @@ The current controller start check uses the common block of [P/06.6](../../06-co
 
 <!-- req: P/04-R062 -->
 
-Table snapshots follow the procedure below, after unit snapshots and before the final report. for each table from domain.view_tables of the manifest: the rows of the table → rows by N1.3b, the order — key. a row whose field does not read by its type — skip, the counter snapshot_rows_garbled. rows equal to those this process has already written — do not write, ts is the former one.
+Table snapshots follow the procedure below, after unit snapshots and before the final report. For each table from domain.view_tables of the manifest, build rows by N1.3b in key order. Skip a row whose field does not read by its type and increment snapshot_rows_garbled. Form the candidate ordinary object or ceiling stub, then apply the comparison without ts of P/04-R174; an unchanged cluster/refused/rows preserves the former ts and causes no write.
 
 <!-- req: P/04-R411 -->
 
@@ -1599,6 +1631,10 @@ The refusals of the console doors (the policy, the drain, the labels, the server
 
 The closed catalogue is [forms/refusals.tsv](../forms/refusals.tsv), `chapter = 4`. Columns `cause`, `outcome`, `diagnostic`, `caller` define the cause, outcome, diagnostics and caller action; fixed machine codes supplement these fields. `peer` refers to the console contract, not a controller HTTP API.
 
+<!-- req: P/04-R564 -->
+
+Whenever this lesson requires a log once per series, the implementation defines the series and its key and declares them in its description, for example by shard, error type or field. One mandatory log entry is written for each declared series; silence is forbidden. The chosen grouping and the exact log count between otherwise admissible implementations are not judged.
+
 ---
 
 ## N5 Acceptance
@@ -1667,6 +1703,10 @@ interventions; in the translation window the author reads only documents and doe
 | P/04-17 | a successful/partly refused pass, grows on/off | the required fields of the report, failures, short and wants correspond to the steps performed |
 | P/04-20 | a unit whose key `<sub>/placement/<id>` is 1 byte longer than the key limit of the store, with free capacity; the same unit in a group | the intent is not written; the unit is in `unplaceable` with `why`; the other units of the same subsystem are placed |
 | P/04-19 | two controllers admit different units with capacity 1; spread_by; a group with different home; a change of holder after each step of intent | one common decision, no overload/split from competition; late writes are cut off by turn; an incomplete transfer is completed before the next admission |
+| P/04-R558, P/04-R559 | readable disagreement between assignments and effective decisions before decommission admission; holds.by differs from heartbeat place | checked by reading: exact metadata membership and frozen sequences; the decommission witnesses exercise chunk/progress recovery, not these conflicting metadata sources |
+| P/04-R562, P/04-R563 | missing base together with quiet/pending; waiting in one label set while another has none | checked by reading: state priority and one role-wide no-shortage timer; the shrink vector receives an already computed timer and does not prove its aggregation |
+| P/04-R174, P/04-R062 | unchanged rows with a changed cluster or stub/ordinary transition; a new ts only | checked by reading: compare the complete candidate without ts; the unchanged-table witness keeps the envelope unchanged and does not distinguish those transitions |
+| P/04-R292, P/04-R566 | a label mismatch under none and labels-subset; choose without a candidate | checked by reading: mismatch under none is not reachability shortage, failed choose preserves placement and reports the reason for an unplaced unit; the label stand scenario uses labels-subset |
 
 ---
 
@@ -1687,6 +1727,10 @@ The implementation is to name in its description:
 9. **the command printing the pass report** `<sub>/controller/pass` for the acceptance — by the section «Stand» of the common README of the acceptance. The judge observes the N1.2 JSON object through the resource object door; a chosen inspection command prints that same report and does not define another report form.
 10. **how the snapshot is published** on a store refusal (a log once per series); the period — after every pass (N1.3a `publish`), there is no choice. The judge observes a kept shard/time on TooLarge before put, the actual read-back on an unknown write outcome, and the once-per-series log; unchecked data never become an empty replacement.
 11. ~~**where the `cluster` of the snapshot comes from**~~ — normed: `CLUSTER` of the environment (N1.3a; P/02.4 N1.2), not set — `local`. The snapshot field cluster is the supplied CLUSTER value or local when unset.
+12. **the chosen list orders** of P/04-R558 and P/04-R561; the implementation decides and these choices are not judged. List membership, frozen plan sequences and the normative table-snapshot order remain required.
+13. **JSON representation** of P/04-R560; whitespace, object-key order and either admissible manifest_rev notation are not judged. Exact values, required forms and actual serialized-byte ceilings remain required.
+14. **series and their keys for mandatory logs** by P/04-R564; the grouping is not judged, and silence does not satisfy a mandatory log.
+15. **the pass schedule after an overrun** by P/04-R565; the scheduling choice is not judged, while the period without an overrun and non-overlapping cycles remain required.
 
 ---
 
@@ -1710,7 +1754,7 @@ findings and window records refer to:
 - [ ] **P/04-10** [test, reading] the slot fate of N3: the outcomes, the order of the rules, presence only from the live heartbeat of the resource, the terms SLOT_TERM/LOST_AFTER/HUNG_MOVE_AFTER, the controller does not write the slot except `release`; an unreadable gen is not reset and does not allow its capture — the outcomes and the exact boundaries of the terms: the seams `s1-fate-before-term`, `s3-fate-gone-with-units`, `s4-fate-margin`, `s5-fate-two-silences`, `s6-fate-gone-before-fresh-beat`, `s7-fate-hung-young`, `s8-fate-hung-boundary`, `s9-fate-wait-no-units`, `s10-fate-wait-boundary`, `s11-fate-runs-no-units`, `s12-fate-presence-unknown`, `s13-fate-unreachable-boundary`, `s34-fate-resource-never-seen-assigned`; the write release of a slot without units with the former items — `s2-fate-release-term`, `s35-fate-resource-never-seen-empty`; a lost CAS of release — `s15-release-cas-race`; an unreadable gen — no write and no permission — `s14-fate-no-permission-bad-gen`, `s16-release-unreadable-gen` of [the lesson](../acceptance/seams.tsv) (judge-only: checks P/04-R039–P/04-R046) (`CALL controller-fate`); the judgement of a slot row — the vectors [`slot`](../../common/vectors/slot/README.md), the state of a resource — the vectors [`resource-state`](../../common/vectors/resource-state/README.md); on the full stand: release of a slot without units (not move), the write release of a readable slot, of a torn `until` and of an unreadable gen — sc. 21 [of the lesson acceptance](../acceptance/README.md) (judge-only: checks P/04-R039–P/04-R046); the margin SLOT_TERM + LOST_AFTER and `hung` with the presence `runs` (the name is not given, the slot is not released, the unit does not leave; without units — not release) — sc. 26, 27; `wait` with `unlisted` (the name is not given, the slot is not released) — sc. 42; the local observation starts anew after forced controller restart — sc. 42; the terms on a real server failure — P/04-22
 - [ ] **P/04-11** [test] `names_given` is bound to the version of the slot row; only NAME_FATES and `wait` beyond the limit; a row with an unreadable gen is not included until the generation is recovered — the permission version `permission_version` of the seams `s2-fate-release-term`, `s3-fate-gone-with-units`, `s8-fate-hung-boundary`, `s35-fate-resource-never-seen-empty`; `wait` gives the name only beyond the limit — `s9-fate-wait-no-units`, `s10-fate-wait-boundary`; an unreadable gen and a lost release CAS — no permission — `s14-fate-no-permission-bad-gen`, `s16-release-unreadable-gen`, `s15-release-cas-race` of [the lesson](../acceptance/seams.tsv) (judge-only: checks P/04-R040, P/04-R041, P/04-R042, P/04-R046) (`CALL controller-fate`); on the full stand: the name of a released slot in `names_given`, an unreadable gen outside it — sc. 21; `wait` does not give the name before the limit — sc. 42
 - [ ] **P/04-12** [test, reading] move/first addition/sync — one intent: remove all members from all assignments, complete placement, add to one target and only then idle; each change with cas and guard turn, 412 stops the attempt; the removals before the addition — the seam `s18-intent-removals-before-add`, no write after an unknown outcome and a failed barrier — the seam `s19-intent-unknown-barrier` of [the lesson](../acceptance/seams.tsv) (judge-only: checks P/04-R027, P/04-R036, P/04-R037) (`CALL controller-complete-intent`); the completion of an active intent (removal, row, addition, idle) — sc. 28, `sync` — sc. 29 [of the lesson acceptance](../acceptance/README.md) (judge-only: checks P/04-R027, P/04-R036, P/04-R037); `Moved` with an already different source target (N3 «move», step 1) and the rest — checked by reading
-- [ ] **P/04-13** [test, reading] leaving: the reasons in order, without a budget, a group whole or it stays — checked by reading; `silent` — only with `requires: resource` and a live worker, otherwise the fate of SLOT_TERM + LOST_AFTER — P/04-30; a released slot — the units without a place are removed (`worker: ""`) — sc. 03 of [the acceptance of P/03.4](../../03-worker/acceptance/4/README.md) (judge-only: checks P/04-R047, P/04-R322); a capture in progress (`taking`) takes them away only after SLOT_TERM of an unchanged version — sc. 13; drain — sc. 33, the place does not admit (`admits: false`) — sc. 39; reachability: the server no longer reaches the labels of the unit, the unit is removed with a reason of reachability — sc. 24 [of the lesson acceptance](../acceptance/README.md) (judge-only: checks P/04-R047, P/04-R322); the budget REACH_BUDGET — checked by reading
+- [ ] **P/04-13** [test, reading] leaving: the reasons in order, without a budget, a group whole or it stays — checked by reading; `silent` — only with `requires: resource` and a live worker, otherwise the fate of SLOT_TERM + LOST_AFTER — P/04-30; a released slot — the units without a place are removed (`worker: ""`) — sc. 03 of [the acceptance of P/03.4](../../03-worker/acceptance/4/README.md) (judge-only: checks P/04-R047, P/04-R322); a capture in progress (`taking`) takes them away only after SLOT_TERM of an unchanged version — sc. 13; drain — sc. 33, the place does not admit (`admits: false`) — sc. 39; reachability with constraint: labels-subset by P/04-R150 and P/04-R566: the server no longer reaches the labels of the unit, the unit is removed with a reason of reachability — sc. 24 [of the lesson acceptance](../acceptance/README.md) (judge-only: checks P/04-R047, P/04-R322); the budget REACH_BUDGET — checked by reading
 - [ ] **P/04-14** [test, reading] order: per — a positive observed capacity, otherwise a positive capacity.default, otherwise withheld without division; the shortage by label sets and weight minus the capacity in flight; the order row always, `want` 1…WANT_NUM_MAX as an absolute target, cas and guard turn; the candidates (the base is alive, room, numbers, distinct by place_by, drain, decommission); the withdrawal on deadline `WANT_GRACE`, «failed to raise» `RAISE_QUIET`; shrinking — `SHRINK_AFTER`, hysteresis, only the live top number n=want(s)>1 per server; a protected top skips its whole server (a number above want is not a victim), `retiring`, `SHRINK_BUDGET`, cancel; the alarms `workers.no_server`, `workers.raise_failed`; in flight — the numbers 2…want without a live process by heartbeats, the candidate and the share — by the door (`live.<sub>` by numbers, free once per pass), a number above want is outside the pool (its stop by the script on the host — P/04-31), the withdrawal on deadline — by numbers, `distinct` with the place from the heartbeat — a server without a live suitable one without a place, without a probe in flight (in flight(s) = 0), no more than one probe per pass, and `no free <place_by>`, the capacity — the smallest positive one, the forms of `short[]` — the vectors `order`, `shrink-victim`, `shrink-allowed` (the shrink condition and the order of the refusal reasons, including live ones without a place while there are waiting); the deadline `WANT_GRACE` restarts when the number falls again — the seam `s32-want-grace-restarts` (`CALL controller-want`); a protected top skips its server — `s36-shrink-wanted-top-prefix`, the victim on another server — `s37-shrink-wanted-other-server`; the end of growth with a manual row does not block shrinking — `s38-growth-ended-manual-row`; `short[]` at the bound 2^53 — `s51-short-weight-max53`, `s52-short-weight-at53`, `s53-short-weight-odd53` of [the lesson](../acceptance/seams.tsv) (judge-only: checks P/04-R050, P/04-R051, P/04-R052, P/04-R053) (`CALL controller-pass`); on the full stand — sc. 14–17 after P/05 (`@grow`), completion of a persisted retiring by a new controller — sc. 45; the rest by reading
 - [ ] **P/04-15** [test, reading] `delete_after` by the clock of the controller from the first look, a fresh check of the effective placement, `cas` of the unit and guard of the own turn, the journal: the count from the removal — the seam `s22-retire-counter-reset`; a refused delete of the unit deletes no state and writes no journal — `s23-delete-cas-then-state`; `409 early` without a barrier and a journal — `s25-made-delete-early` of [the lesson](../acceptance/seams.tsv) (judge-only: checks P/04-R030) (`CALL controller-delete-after`); the journal bucket and the names — the vectors [`journal`](../../common/vectors/journal/README.md); the fresh check of the effective placement and the guard of the own turn — checked by reading
 - [ ] **P/04-16** [test, reading] current manifest_rev is required, no missing-revision stamp; the rule guard and manifest_behind for a newer row — sc.31; a newer placement turn is not taken — sc.32 [of the lesson acceptance](../acceptance/README.md) (judge-only: checks P/04-R405, P/04-R058); manifest change/code0 remains checked by reading
