@@ -127,6 +127,61 @@
       "basis": "The normative performance goals and workload envelope measured by qualification, including crash reopen and healthy member return."
     },
     {
+      "path": "Platform/02-installer/forms/README.md",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/02-installer/forms/finite-profile.schema.json",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/02-installer/forms/refusals.tsv",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/02-installer/qualification/README.md",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/02-installer/qualification/stand-procedures.md",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/02-installer/spec/02.1-installer.norms.md",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/02-installer/spec/02.3-installer.norms.md",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/02-installer/spec/02.4-installer.norms.md",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/02-installer/spec/02.5-installer.norms.md",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/08-domain/data/users.outcomes.tsv",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/08-domain/data/users.schema.json",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
       "path": "Platform/08-domain/forms/runtime-constants.tsv",
       "disposition": "include",
       "basis": "The REPORT_RATE workload definition referenced by the first approved budgets."
@@ -187,9 +242,39 @@
       "basis": "The parsing owner named by the related-scope boundary of the procedures."
     },
     {
+      "path": "Platform/common/contracts/peer.md",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
       "path": "Platform/common/contracts/production-obligations.md",
       "disposition": "include",
       "basis": "Common finite-budget obligations and missing-input outcomes used by qualification."
+    },
+    {
+      "path": "Platform/common/contracts/role-certificate.md",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/common/contracts/sealing.md",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/common/contracts/secret-files.md",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/common/data/catalog.tsv",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
+    },
+    {
+      "path": "Platform/common/data/codec.tsv",
+      "disposition": "include",
+      "basis": "Explicit norm, form, schema or procedure dependency of P/02 external qualification."
     },
     {
       "path": "Platform/common/vectors/production-obligations/README.md",

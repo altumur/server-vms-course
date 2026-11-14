@@ -1,0 +1,2 @@
+# Nested declarations refuse before the output file even with the same reader.
+testsub2

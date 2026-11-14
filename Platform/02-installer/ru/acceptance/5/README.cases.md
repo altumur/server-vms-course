@@ -38,6 +38,11 @@ null`); сц. 12 — роли домена.
 | `v5-secret-domainworker` | `va` с `secrets.readers: {va/vault: [domainworker]}` и `kept` | `domainworker` → `vadomain` читает, прочие — нет; соседи `va/vault2` и `va/vault/nested` сохраняют обычное чтение `console` и `vaworker` (P/02.5 N1.3) |
 | `v15-name18-roles` | `s12345678901234567` (18 знаков) — байт в байт `v1-base`, кроме имени и `worker.exec` | роли `s12345678901234567worker` и `s12345678901234567controller` сохраняют полное имя: воркер пишет свой слот и читает строки единиц, не пишет их; контроллер пишет размещение, не строки единиц; консоль пишет строки единиц (P/02.5 N1.4, N3 шаг 1) |
 | `v16-secret-prefix` | `va` — байт в байт `va` из `v14-refused-secrets-reads-nested`: `secrets.readers: {va/vault/: [worker]}` | префикс закрывает только строки под косой чертой: `vaworker` читает `va/vault/x`, `console` и `vacontroller` — нет; `va/vault` и `va/vault2` сохраняют обычное чтение `console` (P/02.5 N1.3, N1.4, N3 шаг 4) |
+| `v17-secret-own-book` | `testsub` объявляет точный секрет и префикс переносимой книги `tallies`; `testsub2` имеет лишь `secrets.reads` копии | `testsub2worker` читает точную копию и `domain/testsub/tallies/local` (CLUSTER не задан), не другого члена и не потомка, не пишет и не удаляет строку держателя (P/02.5-R082) |
+| `v18-refused-secret-readers-nested` | `testsub` объявляет `shared/`, `testsub2` — `shared/x/`, оба с читателем resource | код 2 до выходного файла, диагностика называет `testsub2`; равные читатели не делают вложенные объявления представимыми (P/02.5-R023/R087) |
+| `v19-secret-readers-neighbours` | те же манифесты со вторым префиксом `sharedx/` | вывод успешен, resource читает оба префикса; положительный соседний контроль отказа вложенных объявлений (P/02.5-R023/R087) |
+
+`v1-base` также отдельно проверяет запись и удаление domainagent по каждому действующему исключению вывода ролей домена: точные ключи и семьи с исключениями копий члена. Конкретные ключи папок `domain/folders/f1`, `domain/memberof/local/va/items/u1`, `domain/folder-rev` запрещены; `domain/folders-state`, `domain/revoked`, точные `domain/roles`, `domain/grants`, `domain/outcomes` и соседи `foldersx`, `memberofx`, `folder-revx` разрешены. Поэтому широкий префиксный запрет не заменяет правило каталога. Эти 200 проб наблюдают действующие права; `v12-check-rights` отдельно сравнивает смысл файла прав.
 
 ### Исходный отрывок 5
 
@@ -51,7 +56,7 @@ null`); сц. 12 — роли домена.
 ### Исходный отрывок 7
 
 `--check` и отказы генератора до файла — формы `check.tsv` и `refused` (выше): `v12-check-rights`,
-`v13-refused-idem-read`, `v14-refused-secrets-reads-nested`. Случай `check.tsv` с кодом `0` — `same` варианта `v12-check-rights`:
+`v13-refused-idem-read`, `v14-refused-secrets-reads-nested`, `v18-refused-secret-readers-nested`. Случай `check.tsv` с кодом `0` — `same` варианта `v12-check-rights`:
 ровно вывод прав по N1.4: ресурсу — `<M>/<holds.table>/*`
 только у манифеста с `holds`, `<s>/holds/*` не выдаётся; отрицание секрета нечитателю — только
 если после уже выданных отрицаний его права ещё достают образец; метки

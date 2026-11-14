@@ -1,0 +1,11 @@
+name: testsub2
+unit:
+  rows: items
+  id: name
+  fields:
+    name: {type: string, required: true}
+placement:
+  capacity: {default: 1}
+worker: {exec: /usr/lib/testsub2/worker}
+secrets:
+  reads: [domain/testsub/tallies]
