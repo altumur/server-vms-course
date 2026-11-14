@@ -1,0 +1,9 @@
+# Exact secret book copy and its one holder row; CLUSTER is unset (local).
+role	action	key	expect
+testsub2worker	read	domain/testsub/tallies	allow
+testsub2worker	read	domain/testsub/tallies/local	allow
+testsub2worker	read	domain/testsub/tallies/other	deny
+testsub2worker	read	domain/testsub/tallies/local/x	deny
+testsub2worker	read	domain/testsub/tallies2	deny
+testsub2worker	write	domain/testsub/tallies/local	deny
+testsub2worker	delete	domain/testsub/tallies/local	deny

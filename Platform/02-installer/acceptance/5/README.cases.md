@@ -38,6 +38,11 @@ an allowed read of an absent row returns Row with items null per chapter P/01.1.
 | `v5-secret-domainworker` | `va` with `secrets.readers: {va/vault: [domainworker]}` and `kept` | `domainworker` → `vadomain` reads, the others — no; the neighbours `va/vault2` and `va/vault/nested` keep the ordinary reads of `console` and `vaworker` (P/02.5 N1.3) |
 | `v15-name18-roles` | `s12345678901234567` (18 characters) — byte for byte `v1-base` except the name and `worker.exec` | the roles `s12345678901234567worker` and `s12345678901234567controller` keep the full name: the worker writes its slot and reads the unit rows, does not write them; the controller writes the placement, not the unit rows; the console writes the unit rows (P/02.5 N1.4, N3 step 1) |
 | `v16-secret-prefix` | `va` — byte for byte `va` of `v14-refused-secrets-reads-nested`: `secrets.readers: {va/vault/: [worker]}` | the prefix closes only the rows under the slash: `vaworker` reads `va/vault/x`, `console` and `vacontroller` — no; `va/vault` and `va/vault2` keep the ordinary reads of `console` (P/02.5 N1.3, N1.4, N3 step 4) |
+| `v17-secret-own-book` | `testsub` declares the exact and prefix secret of transferable book `tallies`; `testsub2` has only `secrets.reads` of the copy | `testsub2worker` reads the exact copy and `domain/testsub/tallies/local` (unset CLUSTER), not another member or a descendant, and cannot write/delete the holder row (P/02.5-R082) |
+| `v18-refused-secret-readers-nested` | `testsub` declares `shared/`, `testsub2` declares `shared/x/`, both with reader resource | code 2 before the output file, diagnostic names `testsub2`; equal readers do not make nested declarations representable (P/02.5-R023/R087) |
+| `v19-secret-readers-neighbours` | same manifests with the second prefix changed to `sharedx/` | derivation succeeds and resource reads both prefixes, the positive neighbor control of the nested-declaration refusal (P/02.5-R023/R087) |
+
+`v1-base` also probes domainagent write and delete separately over every effective exclusion retained in the domain-role derivation: exact keys and families, with the member-copy exceptions. The concrete folder keys `domain/folders/f1`, `domain/memberof/local/va/items/u1`, `domain/folder-rev` are denied; `domain/folders-state`, `domain/revoked`, the exact `domain/roles`, `domain/grants`, `domain/outcomes` and nearby `foldersx`, `memberofx`, `folder-revx` are admitted. Thus a blanket prefix exclusion is not a passing replacement for the catalogue rule. The 200 probes observe effective rights; `v12-check-rights` separately compares the rights file by meaning.
 
 ### Original passage 5
 
@@ -51,7 +56,7 @@ deletes its own, of a foreign manifest — 403, the controller — 403 (N1.4).
 ### Original passage 7
 
 `--check` and the generator refusals before the file — the forms `check.tsv` and `refused` (above): `v12-check-rights`,
-`v13-refused-idem-read`, `v14-refused-secrets-reads-nested`. The case of `check.tsv` with the code `0` is `same` of the variant `v12-check-rights`:
+`v13-refused-idem-read`, `v14-refused-secrets-reads-nested`, `v18-refused-secret-readers-nested`. The case of `check.tsv` with the code `0` is `same` of the variant `v12-check-rights`:
 exactly the derivation of rights per N1.4: to the resource — `<M>/<holds.table>/*`
 only at a manifest with `holds`, `<s>/holds/*` is not given; the negation of a secret to a non-reader — only
 if after the negations already given its rights still reach the pattern; the marks

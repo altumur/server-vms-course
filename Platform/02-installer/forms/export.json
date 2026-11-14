@@ -6162,6 +6162,51 @@
       "basis": "P02.35: a file of a rights variant of chapter 2.5; judge-only as the other files of acceptance/5/variants."
     },
     {
+      "path": "Platform/02-installer/acceptance/5/variants/v17-secret-own-book/expect.tsv",
+      "disposition": "judge_only",
+      "basis": "Owned acceptance variants remain outside M."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v17-secret-own-book/testsub.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "Owned acceptance variants remain outside M."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v17-secret-own-book/testsub2.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "Owned acceptance variants remain outside M."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v18-refused-secret-readers-nested/refused",
+      "disposition": "judge_only",
+      "basis": "Owned acceptance variants remain outside M."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v18-refused-secret-readers-nested/testsub.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "Owned acceptance variants remain outside M."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v18-refused-secret-readers-nested/testsub2.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "Owned acceptance variants remain outside M."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v19-secret-readers-neighbours/expect.tsv",
+      "disposition": "judge_only",
+      "basis": "Owned acceptance variants remain outside M."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v19-secret-readers-neighbours/testsub.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "Owned acceptance variants remain outside M."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v19-secret-readers-neighbours/testsub2.subsystem.yaml",
+      "disposition": "judge_only",
+      "basis": "Owned acceptance variants remain outside M."
+    },
+    {
       "path": "Platform/02-installer/acceptance/5/variants/v2-requests/expect.tsv",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -6517,6 +6562,16 @@
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
     },
     {
+      "path": "Platform/02-installer/qualification/README.md",
+      "disposition": "judge_only",
+      "basis": "Qualification procedures remain outside M."
+    },
+    {
+      "path": "Platform/02-installer/qualification/stand-procedures.md",
+      "disposition": "judge_only",
+      "basis": "Qualification procedures remain outside M."
+    },
+    {
       "path": "Platform/02-installer/ru/02-installer.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
@@ -6590,6 +6645,16 @@
       "path": "Platform/02-installer/ru/lifecycle.md",
       "disposition": "judge_only",
       "basis": "Reused accepted semantic role inventory; exact current mode/type/blob identity."
+    },
+    {
+      "path": "Platform/02-installer/ru/qualification/README.md",
+      "disposition": "judge_only",
+      "basis": "Qualification procedures remain outside M."
+    },
+    {
+      "path": "Platform/02-installer/ru/qualification/stand-procedures.md",
+      "disposition": "judge_only",
+      "basis": "Qualification procedures remain outside M."
     },
     {
       "path": "Platform/02-installer/ru/spec/02-installer.README.md",
@@ -14109,6 +14174,51 @@
       "basis": "Acceptance data of P/02."
     },
     {
+      "path": "Platform/02-installer/acceptance/5/variants/v17-secret-own-book/expect.tsv",
+      "disposition": "include",
+      "basis": "Owned cases of the existing rights-variants target."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v17-secret-own-book/testsub.subsystem.yaml",
+      "disposition": "include",
+      "basis": "Owned cases of the existing rights-variants target."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v17-secret-own-book/testsub2.subsystem.yaml",
+      "disposition": "include",
+      "basis": "Owned cases of the existing rights-variants target."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v18-refused-secret-readers-nested/refused",
+      "disposition": "include",
+      "basis": "Owned cases of the existing rights-variants target."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v18-refused-secret-readers-nested/testsub.subsystem.yaml",
+      "disposition": "include",
+      "basis": "Owned cases of the existing rights-variants target."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v18-refused-secret-readers-nested/testsub2.subsystem.yaml",
+      "disposition": "include",
+      "basis": "Owned cases of the existing rights-variants target."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v19-secret-readers-neighbours/expect.tsv",
+      "disposition": "include",
+      "basis": "Owned cases of the existing rights-variants target."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v19-secret-readers-neighbours/testsub.subsystem.yaml",
+      "disposition": "include",
+      "basis": "Owned cases of the existing rights-variants target."
+    },
+    {
+      "path": "Platform/02-installer/acceptance/5/variants/v19-secret-readers-neighbours/testsub2.subsystem.yaml",
+      "disposition": "include",
+      "basis": "Owned cases of the existing rights-variants target."
+    },
+    {
       "path": "Platform/02-installer/acceptance/5/variants/v2-requests/expect.tsv",
       "disposition": "include",
       "basis": "Acceptance data of P/02."
@@ -14464,6 +14574,16 @@
       "basis": "Outside the judge input: neither the common acceptance nor data of P/01."
     },
     {
+      "path": "Platform/02-installer/qualification/README.md",
+      "disposition": "include",
+      "basis": "Qualification record; functional target selection is unchanged."
+    },
+    {
+      "path": "Platform/02-installer/qualification/stand-procedures.md",
+      "disposition": "include",
+      "basis": "Qualification record; functional target selection is unchanged."
+    },
+    {
       "path": "Platform/02-installer/ru/02-installer.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
@@ -14537,6 +14657,16 @@
       "path": "Platform/02-installer/ru/lifecycle.md",
       "disposition": "exclude",
       "basis": "Russian mirror; the judge input is English only (ADR-0083 (115) item 2, answer to P01.32)."
+    },
+    {
+      "path": "Platform/02-installer/ru/qualification/README.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror is outside the judge export."
+    },
+    {
+      "path": "Platform/02-installer/ru/qualification/stand-procedures.md",
+      "disposition": "exclude",
+      "basis": "Russian mirror is outside the judge export."
     },
     {
       "path": "Platform/02-installer/ru/spec/02-installer.README.md",

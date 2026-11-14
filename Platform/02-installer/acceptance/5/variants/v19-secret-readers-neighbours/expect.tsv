@@ -1,0 +1,4 @@
+# Neighbouring secret prefixes with the same reader do not intersect.
+role	action	key	expect
+resource	read	shared/x/probe	allow
+resource	read	sharedx/probe	allow

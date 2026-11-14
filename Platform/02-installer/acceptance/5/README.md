@@ -65,6 +65,9 @@ The variants and their expected outcomes are in the judge's case data. They cove
 | the two kept admission rows of the controller: read and write without delete; the console and the worker only read them; the other deletions of the controller stay | P/02.5 N5 with P/04 N1.5 (`v1-base`) |
 | the roles keep the full manifest name and the suffix at the longest name whose controller group fits 32 characters | P/02.5 N1.4, N3 step 1; P/02.4 N1.1 (`v15-name18-roles`) |
 | an exact secret key closes one row, a secret prefix only the rows under the slash; the neighbours keep the ordinary rights | P/02.5 N1.3, N1.4, N3 step 4 (`v5-secret-domainworker`, `v16-secret-prefix`) |
+| effective write and delete exclusions of domainagent over the catalogue's holder families, including `folders`, `memberof`, `folder-rev`; nearby keys and the exact member copies remain allowed | P/02.5-R062 (`v1-base`) |
+| only `secrets.reads` of an exact transferable book copy adds the one holder row for the effective cluster, without widening to the book prefix | P/02.5-R082 (`v17-secret-own-book`) |
+| nested `secrets.readers` prefixes across two individually valid manifests refuse even with equal readers; disjoint neighboring prefixes remain valid | P/02.5-R023/R087 (`v18-refused-secret-readers-nested`, `v19-secret-readers-neighbours`) |
 
 ## Not judged in this lesson
 
@@ -82,7 +85,7 @@ The generator keeps both families `domain/placed` and `domain/placement` (`v10-w
 
 The derivation of rights checked by the variants `v8-worker-writes-deletes`, `v9-asked-free-resource`, `v10-worker-domain-reads`,
 `v11-controller-cross-tables` (a separate variant — the manifests of `v6-near-about-ref` do not change). The subjects are above.
-`--check` and the generator refusals before the file use the forms `check.tsv` and `refused` (above; judge-only: `check.tsv` and `refused` of `v12-check-rights`, `v13-refused-idem-read`, `v14-refused-secrets-reads-nested`). A file that equals the derivation of rights per N1.4 compares as equal: to the resource — `<M>/<holds.table>/*`
+`--check` and the generator refusals before the file use the forms `check.tsv` and `refused` (above; judge-only: `check.tsv` and `refused` of `v12-check-rights`, `v13-refused-idem-read`, `v14-refused-secrets-reads-nested`, `v18-refused-secret-readers-nested`). A file that equals the derivation of rights per N1.4 compares as equal: to the resource — `<M>/<holds.table>/*`
 only at a manifest with `holds`, `<s>/holds/*` is not given; the negation of a secret to a non-reader — only
 if after the negations already given its rights still reach the pattern; the marks
 `objects/<s>/commands/*` of the console — only at a manifest with `requests` (as at the worker). What remains by reading: the inequality
