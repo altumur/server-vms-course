@@ -211,5 +211,7 @@ servervms.local/common/log-mask v0.0.0-20261114081904-9c64a5210bd8 h1:9/t9jWtN0k
 servervms.local/common/log-mask v0.0.0-20261114081904-9c64a5210bd8/go.mod h1:wt0Pf/IFK4PxgHVsw1ryIbsRiKduB+Hh/Ii24mzRajE=
 servervms.local/common/rights-evaluator v0.0.0-20261113192213-48487824baa5 h1:lxAinhjM6Owk70q5Aw8HoQAO363tGjJeAukEomazYGY=
 servervms.local/common/rights-evaluator v0.0.0-20261113192213-48487824baa5/go.mod h1:DKEvl+V3Nh0BYHRogIqUuaZa6PfJbpxDwuMVr7Dh5TI=
+servervms.local/common/row-check v0.0.0-20261114090637-b6605ec5659a h1:V70oeNBOQwx0JdRIIRlYjEoyjjI+EVJK4i8jz8LD93g=
+servervms.local/common/row-check v0.0.0-20261114090637-b6605ec5659a/go.mod h1:AYGwLHmZg+IwYMDWsXE/c8oYrcDsFL2eiHfvfXVbzDo=
 servervms.local/common/store-client v0.0.0-20261113192213-48487824baa5 h1:xRxwUjZIZZ7qkiYkYXLDJyN0dS6FPcTtiKsGcLWToDk=
 servervms.local/common/store-client v0.0.0-20261113192213-48487824baa5/go.mod h1:Y+eoijAg2rcXnDQXcOXTiWyhbX2o/HTRacPaLBxyeZU=

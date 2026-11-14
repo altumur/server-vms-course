@@ -13,6 +13,7 @@ require (
 	servervms.local/common/json v0.0.0-20261113192059-b8b1a5bd1dad
 	servervms.local/common/log-mask v0.0.0-20261114081904-9c64a5210bd8
 	servervms.local/common/rights-evaluator v0.0.0-20261113192213-48487824baa5
+	servervms.local/common/row-check v0.0.0-20261114090637-b6605ec5659a
 	servervms.local/common/store-client v0.0.0-20261113192213-48487824baa5
 )
 
