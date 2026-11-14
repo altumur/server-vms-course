@@ -90,7 +90,7 @@
   },
   "short": {
    "$ref": "#/$defs/common.uint53",
-   "description": "how many bytes the mark asked to free and could not (P/06.5 N3 /metrics w2c_resource_short_bytes): Σ over the volumes of the largest need (> 0) among the effective own `free-<server>-<volume>` of this relieve pass — subsystems on one volume are not summed; need — by N3 relieve, rounded up to a whole byte, saturation 2^53−1; platform/space disabled, no requests, need ≤ 0 — 0; the pass input was not read — the previous value"
+   "description": "how many bytes are still needed above high (P/06.5 N3 /metrics w2c_resource_short_bytes): only volumes with current used/total > high contribute; at or below high — 0, even if an own request remains unchanged in the low–high band; Σ over qualifying volumes of the largest positive need among subsystems with effective own free requests, without summing subsystems on one volume; need — by N3 relieve, rounded up to a whole byte, saturation 2^53−1; confirmed platform/space disabled, no requests, need ≤ 0 — 0; an unread pass input — the previous value unless space is independently confirmed disabled"
   },
   "waits": {
    "description": "counters of the /events/wait waits (N1.6); in every heartbeat",
@@ -253,16 +253,20 @@
       "type": "boolean"
      },
      "silent": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "current peer unavailability; optional presence is an implementation choice, not judged"
      },
      "last_ok": {
-      "type": "number"
+      "type": "number",
+      "description": "wall-clock seconds of the last successful peer operation; optional presence is not judged"
      },
      "last_error": {
-      "type": "string"
+      "type": "string",
+      "description": "reason text of the last peer error; optional presence is not judged"
      },
      "error_at": {
-      "type": "number"
+      "type": "number",
+      "description": "wall-clock seconds of the last peer error; optional presence is not judged"
      },
      "restored": {
       "$ref": "#/$defs/common.uint53",
@@ -278,7 +282,8 @@
       "$ref": "#/$defs/common.uint53"
      },
      "next": {
-      "type": "number"
+      "type": "number",
+      "description": "wall-clock seconds of the scheduled next restore attempt; optional presence is not judged"
      }
     },
     "additionalProperties": false,

@@ -1,7 +1,8 @@
 # Ordered decisions of the resource. Choose only rows of the named procedure and evaluate in increasing n.
 # The first true row with flow=stop ends the decision; no match means ordinary continuation. A next row performs its effect and continues.
 # when is CEL over the observations below. No variable or outcome is an implementation API or a new public response word.
-# wait: replaced sends 200/replaced to the former wait and frees its place before the capacity check; full sends 200/full to the new wait; admit continues to the remaining admission rules, including P/05-R154 for a busy address without client; it does not promise admission by itself.
+# wait: quiet sends the current WaitQuiet immediately without queue admission, replacement or capacity consumption; replaced sends 200/replaced to the former wait and frees its place before the capacity check; full sends 200/full to the new wait; admit continues to the remaining admission rules, including P/05-R154 for a busy address without client; it does not promise admission by itself.
+#var unknown_since bool — since is nonzero and unknown to this resource process
 #var named_identity bool — the new wait has client and the same verified CN/client as its former wait
 #var former_wait bool — that former wait is currently pending
 #var waiting int — pending waits after any preceding effect
@@ -19,16 +20,17 @@
 #var door_family bool — the key belongs to an admitted door family, not a row object
 #var key_exists bool — the admitted key exists among the answering servers
 n	id	procedure	when	outcome	flow	norm
-1	wait-replace	wait	named_identity && former_wait	replaced	next	P/05-R152
-2	wait-full	wait	waiting >= waiter_limit	full	stop	P/05-R152
-3	wait-admit	wait	true	admit	stop	P/05-R152
-4	retention-unknown	retention	term_unknown	unknown	stop	P/05-R234
-5	retention-garbled	retention	days_garbled	days_garbled	stop	P/05-R234
-6	retention-holds	retention	holds_unread	holds_unread	stop	P/05-R234
-7	presence-unknown	presence	in_unknown	unknown	stop	P/05-R087
-8	presence-runs	presence	in_running	runs	stop	P/05-R087
-9	presence-gone	presence	in_workers	gone	stop	P/05-R087
-10	presence-unlisted	presence	true	unlisted	stop	P/05-R087
-11	key-form	object-key	!key_form	400 ResourceError	stop	P/05-R109
-12	key-family	object-key	!door_family	403 ResourceError	stop	P/05-R109
-13	key-missing	object-key	!key_exists	404 ResourceError	stop	P/05-R109
+1	wait-unknown	wait	unknown_since	quiet	stop	P/05-R300
+2	wait-replace	wait	named_identity && former_wait	replaced	next	P/05-R152
+3	wait-full	wait	waiting >= waiter_limit	full	stop	P/05-R152
+4	wait-admit	wait	true	admit	stop	P/05-R152
+5	retention-unknown	retention	term_unknown	unknown	stop	P/05-R234
+6	retention-garbled	retention	days_garbled	days_garbled	stop	P/05-R234
+7	retention-holds	retention	holds_unread	holds_unread	stop	P/05-R234
+8	presence-unknown	presence	in_unknown	unknown	stop	P/05-R087
+9	presence-runs	presence	in_running	runs	stop	P/05-R087
+10	presence-gone	presence	in_workers	gone	stop	P/05-R087
+11	presence-unlisted	presence	true	unlisted	stop	P/05-R087
+12	key-form	object-key	!key_form	400 ResourceError	stop	P/05-R109
+13	key-family	object-key	!door_family	403 ResourceError	stop	P/05-R109
+14	key-missing	object-key	!key_exists	404 ResourceError	stop	P/05-R109

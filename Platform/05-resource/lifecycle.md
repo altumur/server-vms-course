@@ -21,7 +21,7 @@ retell them.
 - **Launch** — through the runner `w2c-run.sh resource` with `W2C_ROLE=resource` ([P/02.4] N1.1 — the unit sets it; N1.9).
 - **Start order** — the schema check of `platform/schema` and the read of the manifest row before the first write ([P/05] N3 «resource start
   — schema check», [P/02.3] N3 «Process start»); then the heartbeat at once, the heartbeat stream, `restore` of the buckets in its own attempt,
-  the door row `platform/doors/<host>` ([P/02.4] N3 «server start», step 2).
+  the door row `platform/doors/<host>` ([P/02.4] N3 «server start», step 2). Starting restore does not wait for done before the door is published; HTTP, heartbeat and the first pass after readiness continue independently (P/05-R312). Incomplete restore attempts repeat within this process under P/05-R307.
 
 ## Environment
 

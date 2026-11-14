@@ -6,7 +6,7 @@ The stand and the dictionary of directives and doors are in [the common acceptan
 The norm of the lesson is [`05-resource.norms.md`](../spec/05-resource.norms.md) N5.
 
 Doors and directives: `resource`, `console`, `store`, `admin` (sc. 17, 24–29, 37–41), `@start resource` (sc. 09-resource-door, 10-body-copy, 16-presence-lock, 17–28, 31, 33, 37–41; the expectation `@exit 2` — sc. 17), `@start resource on srv-b`, `@sigterm resource`, `@sigkill resource#1` (sc. 31), `@start controller` (sc. 42), `@start worker` (sc. 16, 19, 20, 24–28, 42, 43), `@sigkill` (sc. 16-presence-lock, 33, 43), `@spoil object` (sc. 43), `@put object` from `inputs/` (sc. 44, 45; the section «Inputs `inputs/`»), `@until`, `@append event`
-(sc. 08, 21, 22, 34–38), `@append event-raw` (sc. 22), `@cut role resource store` / `@mend role resource store` and `@sleep` (sc. 18; the sleeps — the section «Sleeps»), the request forms `@header` (`X-Written`, `X-Sum`, `Range`), `@raw`, `@big` (sc. 23), the method `HEAD` (sc. 35), `ASSERT`; the expectations `@oneof` (sc. 20), `@header <Name>: ~<text>` (sc. 31, 33, 36), `<code> ~text` (sc. 33, 36).
+(sc. 08, 21, 22, 34–38), `@append event-raw` (sc. 22), `@cut role resource store` / `@mend role resource store` and `@sleep` (sc. 18; the sleeps — the section «Sleeps»), the request forms `@header` (`X-Written`, `X-Sum`, `Range`), `@raw`, `@wire` (sc. 33, a complete chunked request without Content-Length), `@big` (sc. 23), the method `HEAD` (sc. 35), `ASSERT`; the expectations `@oneof` (sc. 20), `@header <Name>: ~<text>` (sc. 31, 33, 36), `<code> ~text` (sc. 33, 36).
 
 ## Preparation of each scenario
 
@@ -44,8 +44,8 @@ these scenarios do not replace the check of the TLS refusals.
 ## scenarios.tsv
 
 The format is [the dictionary of directives and doors of the «Stand» of the common acceptance README](../../common/acceptance/README.md#dictionary-of-directives-and-doors).
-In total 35 scenarios / 297 steps; sc. 29–45 — 133 steps; sc. 24–28 (the edges of `free_ask`, below) — 49 steps; the other 115: 86 HTTP (with @until), four `@append event`, `@append event-raw`, 18 `@start`, `@sigkill`,
-`@cut`, `@mend`, `@sleep` and two ASSERT.
+In total 35 scenarios / 304 steps; sc. 29–45 — 139 steps; sc. 24–28 (the edges of `free_ask`, below) — 49 steps; the other 116: 86 HTTP (with @until), four `@append event`, one `@append event-raw`, 18 `@start`, one `@sigkill`,
+one `@cut`, one `@mend`, one `@sleep` and three ASSERT.
 
 Parameter and path checks:
 
@@ -110,7 +110,7 @@ Each expectation is from the norm:
   `room.testsub`, `live.testsub`, they are not expected;
 - sc. 21-events-wait — the hint (N1.6): there are no rows under `want` — the wait answers by the deadline `{changed: false, seq}`; the row
   `testsub/c1` of the kind `probe.tick` is appended — `since=0` («the client has no position») answers at once `{changed: true, seq,
-  touched}` with exactly this triple; `seq` is monotonic (`ASSERT $s1 <= $s2`); the cursor `since=seq` without new rows — again
+  touched}` with exactly this triple; `seq` is positive (`ASSERT $s1 > 0`) and monotonic (`ASSERT $s1 <= $s2`); the cursor `since=seq` without new rows — again
   `changed: false`. The outcomes `full`, `replaced` and the eviction require parallel waits — outside the TSV;
 - sc. 22-torn-tail — a torn tail (N1.3 «Unreadable bucket line», N3 «query» step 3; the event journal contract `torn`;
   the event journal merge contract `partial`): a whole line is given out, `truncated` 0; a tail without LF — even a parsable JSON — is not
@@ -274,4 +274,18 @@ the answer before the drain, no key; exactly 64 MiB — 204 and the reading 200 
 
 ## Completed-call witnesses
 
-Seams s63–s67 in [seams.tsv](seams.tsv) supplement the 35 process scenarios / 297 steps and relieve 9+6 vectors. S63 awaits the real synchronous relieve return, then observes 0 writes / 0 deletes, exact contents and the previous own-request version in the band. S64/S65 observe actual candidate IO at 144/145 and calendar fallback, never a result cap. S66/S67 check separate restore/mirror failure-sequence boundaries and unchanged cumulative diagnostics. Setup and normalization are [forms/README](../forms/README.md). These are source obligations; declaration is not execution of an implementation, IO or acceptance. The ms support and actual port bindings are checked separately.
+Seams s63–s67 in [seams.tsv](seams.tsv) supplement the 35 process scenarios / 304 steps and relieve 9+6 vectors. S63 awaits the real synchronous relieve return, then observes 0 writes / 0 deletes, exact contents and the previous own-request version in the band. S64/S65 observe actual candidate IO at 144/145 and calendar fallback, never a result cap. S66/S67 check separate restore/mirror failure-sequence boundaries and unchanged cumulative diagnostics. Setup and normalization are [forms/README](../forms/README.md). These are source obligations; declaration is not execution of an implementation, IO or acceptance. The ms support and actual port bindings are checked separately.
+
+## Contract boundary evidence
+
+The process table separately observes these boundaries:
+
+- P/05-R309: sc. 21 step 3 checks that the first returned seq is positive; its particular starting value is not judged.
+- P/05-R311: sc. 36 steps 8–10 check end beyond size, an oversized suffix of a nonempty file and start greater than end, including Content-Range.
+- P/05-R314: sc. 33 steps 15–17 send an actual complete chunked body with `@wire`, without Content-Length, then read the body and the unchanged listing stamp of the identical copy. This is not a framing adapter's predicted answer.
+
+Additional branches are checked by reading the implementation because the existing process dictionary has no operation to select a guaranteed unknown opaque seq, inspect wait-queue effects while measuring immediate return, create an empty local bucket through its ordinary writer, or control current statfs failure/recovery. For P/05-R300, trace the unknown-nonzero branch before replacement/capacity and its current WaitQuiet without admission. For P/05-R310, check logical subsystem matching over both physical trees and that a `.alarms` want matches nothing without normalization or a new 400. For P/05-R311, check suffix-range 416 on an empty file. For P/05-R313, trace an unread current volume through no dependent free-ask mutation and preserved short, with independently confirmed disabled space still removing own requests and yielding zero. These readings do not claim timing or concurrent process execution.
+
+Restore and persistence require reading beyond the existing peer-error seams: P/05-R301, the shared local written contract/API used by every writer; R302, differing checksum-valid copies leave the local bytes/stamp intact and restore incomplete; R303, absent heartbeat fallback even with a nonempty root; R307, incomplete attempts retry in the same process with the declared backoff and separate counters; R308, optional diagnostic presence and the meaning of each field when present; R312, readiness/HTTP/heartbeat and the first pass do not await restore done. The current seams do not provide conflicting-copy inventories, partial-loss setup, a controlled complete restore scheduler or publication barriers for every writer. Reading does not prove OS durability, a timer or a race; real system execution remains separate.
+
+P/05-R304 is checked by reading the door-set source, absence of a live filter, finite declared deadline, partial listing/missing and 503 for an unknown set/local I/O error; sc. 31 remains a process check of ordinary partial polls, not of an unknown server set. P/05-R305 does not judge the chosen contents of differing-id copies; the one-line-per-id, filter/order/cache rules still apply. P/05-R306 uses the existing shortfall vectors for the strict high boundary and zero below it; a persisted row in the low–high band does not change short. Sc. 41 and seam s63 establish row stability separately, not completion of a new short observation.

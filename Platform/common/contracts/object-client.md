@@ -84,6 +84,8 @@ listing:   the closed form ObjectListing; only the keys of the door families und
            tombstones .gone/<object-key>: the ordinary listing does not show them, prefix=.gone/ — a read-only listing of tombstones
 ```
 
+For `scope=cluster`, the resource polls its local server and all foreign servers in a confirmed door listing, without a liveness filter. A known non-answer or unreadable door is missing: an otherwise readable listing returns 200 with missing, and key reads carry X-Missing when incomplete. An unconfirmed server set or failed local read/listing gives the existing 503, not a complete result. The implementation declares the finite dependency deadline under the common production obligations.
+
 ## Outcomes and what the client does
 
 | Outcome | Code | What the client does |

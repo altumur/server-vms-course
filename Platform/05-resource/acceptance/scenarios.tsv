@@ -108,10 +108,11 @@ scenario	step	request	expect
 # 21-events-wait (coverage audit of P/05, F05): the hint /events/wait — no rows under want: {changed: false, seq} by the deadline; a row exists: since=0 — changed with touched at once; the cursor since=seq — again without changes
 21-events-wait	1	@start resource	ok
 21-events-wait	2	resource GET /events/wait?want=testsub/probe.tick/c1&since=0&timeout=1	200 {"changed": false, "seq": "$s1"}
-21-events-wait	3	@append event testsub/c1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-1"}	ok
-21-events-wait	4	resource GET /events/wait?want=testsub/probe.tick/c1&since=0&timeout=5	200 {"changed": true, "seq": "$s2", "touched": ["testsub/probe.tick/c1"]}
-21-events-wait	5	ASSERT $s1 <= $s2	
-21-events-wait	6	resource GET /events/wait?want=testsub/probe.tick/c1&since=$s2&timeout=1	200 {"changed": false}
+21-events-wait	3	ASSERT $s1 > 0	
+21-events-wait	4	@append event testsub/c1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-1"}	ok
+21-events-wait	5	resource GET /events/wait?want=testsub/probe.tick/c1&since=0&timeout=5	200 {"changed": true, "seq": "$s2", "touched": ["testsub/probe.tick/c1"]}
+21-events-wait	6	ASSERT $s1 <= $s2	
+21-events-wait	7	resource GET /events/wait?want=testsub/probe.tick/c1&since=$s2&timeout=1	200 {"changed": false}
 # 22-torn-tail (coverage audit of P/05, F06): the bucket tail without LF (parseable JSON) is not a line: not in events and truncated, partial: true, not lines_garbled; a whole line is returned
 22-torn-tail	1	@start resource	ok
 22-torn-tail	2	@append event testsub/c1/e1 {"t": {now}, "kind": "probe.tick", "id": "e1-74657374737562-6331-1-70726f6265-1"}	ok
@@ -228,6 +229,9 @@ scenario	step	request	expect
 33-mirror-put-read	12	@until 30 resource GET /mirrored/srv-b	200 {"copies": [{"path": "testsub/c1/e1/20260101T000000Z.events.jsonl", "written": "$w1", "size": 3, "sum": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae"}]}
 33-mirror-put-read	13	resource GET /mirrored/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl	200 @header X-Sum: ~2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae
 33-mirror-put-read	14	resource GET /mirrored/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl	200 ~foo
+33-mirror-put-read	15	resource @wire PUT /mirror/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl HTTP/1.1\r\nHost: localhost\r\nTransfer-Encoding: chunked\r\nX-Sum: 2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae\r\nConnection: close\r\n\r\n3\r\nfoo\r\n0\r\n\r\n	204
+33-mirror-put-read	16	resource GET /mirrored/srv-b/testsub/c1/e1/20260101T000000Z.events.jsonl	200 ~foo
+33-mirror-put-read	17	resource GET /mirrored/srv-b	200 {"copies": [{"path": "testsub/c1/e1/20260101T000000Z.events.jsonl", "written": "$w1", "size": 3, "sum": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae"}]}
 # 34-events-alarms-unit (G05 part 1; E32, C05-QUERY-UNIT-ALARMS-01): a line of the tree testsub.alarms/c1 — subsystem testsub, unit testsub/c1, class alarm; unit=testsub.alarms/c1 — the UnitRef form, not normalized: 200 without matches
 34-events-alarms-unit	1	@append event testsub.alarms/c1/e1 {"t": {now}, "kind": "probe.alarm", "id": "e1-746573747375622e616c61726d73-6331-1-70726f6265-1", "of": "testsub/c1", "class": "alarm"}	ok
 34-events-alarms-unit	2	@until 30 resource GET /events?unit=testsub/c1	200 {"events": [{"kind": "probe.alarm", "id": "e1-746573747375622e616c61726d73-6331-1-70726f6265-1", "class": "alarm", "subsystem": "testsub", "unit": "testsub/c1"}], "state": "live", "truncated": 0}
@@ -256,6 +260,9 @@ scenario	step	request	expect
 36-events-bucket-stream	5	resource @header Range: bytes=0-9 GET /events/$b	206 @header Content-Range: ~bytes 0-9/87
 36-events-bucket-stream	6	resource @header Range: bytes=999999-1000000 GET /events/$b	416 @header Content-Range: ~bytes */87
 36-events-bucket-stream	7	resource GET /buckets/testsub/nosuch	404
+36-events-bucket-stream	8	resource @header Range: bytes=0-999999 GET /events/$b	206 @header Content-Range: ~bytes 0-86/87
+36-events-bucket-stream	9	resource @header Range: bytes=-999999 GET /events/$b	206 @header Content-Range: ~bytes 0-86/87
+36-events-bucket-stream	10	resource @header Range: bytes=5-3 GET /events/$b	416 @header Content-Range: ~bytes */87
 # 37-retention-garbled (G06 part 1; C05-RETENTION-PULSE-33, R05-RETENTION-MIXED-51-01): days 0 in testsub/retention and not a number in testsub2/alarms_retention (testsub2/retention is correct) — the first pass: retention_garbled [testsub, testsub2], retention_withheld days_garbled for both; the trees exist before the start
 37-retention-garbled	1	admin POST /v1/write {"id":"73701","op":"put","key":"testsub/retention","items":{"days":"0"},"cas":""}	200
 37-retention-garbled	2	admin POST /v1/write {"id":"73702","op":"put","key":"testsub2/retention","items":{"days":"30"},"cas":""}	200
