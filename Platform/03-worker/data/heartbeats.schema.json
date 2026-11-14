@@ -332,10 +332,13 @@
    "type": "object",
    "properties": {
     "step": {
-     "description": "stood_in.step (N1.1 {step, for, as_of})"
+     "description": "the name of the stuck loop step",
+     "type": "string"
     },
     "for": {
-     "description": "stood_in.for (N1.1 {step, for, as_of})"
+     "description": "the current monotonic age of the stuck step in seconds at this repeat, with precision 0.1 s",
+     "type": "number",
+     "minimum": 0
     },
     "as_of": {
      "$ref": "#/$defs/common.time",

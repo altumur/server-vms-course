@@ -61,6 +61,9 @@ These common files supply definitions used by the chapters, the implementation i
 | [Shared schema definitions](../common/data/common.schema.json) | `$defs` used by the owned families — common scalar and object shapes |
 | [Vector consumers](../common/vectors/consumers.tsv), [wire table](../common/vectors/wire.tsv) | Assigned shared packages of consumer `03-worker` and their input/output bindings |
 | [Row check](../common/contracts/row-check.md) | Unit row; The customer’s row: `made`; Unit state; Preparation of fields; Identifier and field constraints — row types, life ids, ordered rows and state guards |
+| [Platform/06-console/vectors/rid/README.md](../06-console/vectors/rid/README.md) | Public interface of assigned vectors; case files and expected answers are outside M. |
+| [Platform/06-console/vectors/request-digest/README.md](../06-console/vectors/request-digest/README.md) | Public interface of assigned vectors; case files and expected answers are outside M. |
+| [Platform/common/contracts/secret-files.md](../common/contracts/secret-files.md) | Atomic publication and durability barriers of the retained token file. |
 | [Pool](../common/contracts/pool.md) | Live worker; Pool; Keeper of a place with `distinct`; Server eligibility: `placeable`, `why` — capacity, weight, headroom and admission of places |
 | [Forwarding](../common/contracts/forwarding.md) | Client address; Domain worker pass hop policy — `X-W2C-Client` and the domain-worker forwarding boundary |
 | [Domain envelopes](../common/contracts/domain-envelopes.md) | Contribution; Content of `sealed` — the `entry` input and contribution envelope |
